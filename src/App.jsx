@@ -8,7 +8,7 @@ import Featurespage from './Pages/Home/Features/Featurespage';
 import Account from './Pages/Home/Account/Account';
 import Signin from './Pages/Home/Account/Account';
 import Resetpassword from './Pages/Home/Account/Resetpassword';
-import Signup from './Pages/Home/Account/signup';
+import Signup from './Pages/Home/Account/Signup';
 import Tryhome from './Pages/Home/TryPage/trypage';
 import Tutorial from './Pages/Community/tutorial';
 import DocumentationPage from './Pages/Community/documentationpage';
