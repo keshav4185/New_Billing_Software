@@ -1,5 +1,5 @@
 // src/Component/Home/Homesection5.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 // Simplified component for the Invoice Payment Portal Card
 const PaymentPortalCard = () => {
@@ -46,11 +46,78 @@ const PaymentPortalCard = () => {
 };
 
 const Homesection5 = () => {
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            setMousePosition({
+                x: (e.clientX / window.innerWidth) * 100,
+                y: (e.clientY / window.innerHeight) * 100
+            });
+        };
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
     return (
-        <section className="py-24 bg-gray-100/50 relative overflow-hidden">
+        <section className="py-24 relative overflow-hidden">
+            {/* Background Image with Parallax */}
+            <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 ease-out"
+                style={{
+                    backgroundImage: `url('data:image/svg+xml,${encodeURIComponent(`
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800">
+                            <defs>
+                                <linearGradient id="paymentBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:%23f1f5f9;stop-opacity:1" />
+                                    <stop offset="50%" style="stop-color:%23e2e8f0;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:%23cbd5e1;stop-opacity:1" />
+                                </linearGradient>
+                                <pattern id="lightning" width="60" height="60" patternUnits="userSpaceOnUse">
+                                    <path d="M30 10 L20 35 L35 35 L25 50 L40 25 L25 25 Z" fill="%23fbbf24" opacity="0.1"/>
+                                </pattern>
+                            </defs>
+                            <rect width="100%" height="100%" fill="url(%23paymentBg)"/>
+                            <rect width="100%" height="100%" fill="url(%23lightning)"/>
+                            <circle cx="200" cy="150" r="100" fill="%237c3aed" opacity="0.08"/>
+                            <circle cx="1000" cy="200" r="150" fill="%233b82f6" opacity="0.06"/>
+                            <circle cx="800" cy="600" r="120" fill="%236366f1" opacity="0.08"/>
+                            <path d="M 0 400 Q 300 350 600 400 T 1200 400" stroke="%237c3aed" stroke-width="3" fill="none" opacity="0.15"/>
+                        </svg>
+                    `)}')
+                    `,
+                    transform: `translate(${mousePosition.x * -0.02}px, ${mousePosition.y * -0.02}px) scale(1.05)`
+                }}
+            ></div>
+            
+            {/* Parallax Layer 1 - Payment Elements */}
+            <div 
+                className="absolute inset-0 opacity-15 transition-transform duration-800 ease-out"
+                style={{
+                    transform: `translate(${mousePosition.x * 0.03}px, ${mousePosition.y * 0.03}px)`
+                }}
+            >
+                <div className="absolute top-20 left-1/4 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
+                <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
+            </div>
+            
+            {/* Parallax Layer 2 - Lightning Effects */}
+            <div 
+                className="absolute inset-0 opacity-20 transition-transform duration-600 ease-out"
+                style={{
+                    transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`
+                }}
+            >
+                <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-2xl"></div>
+            </div>
             
             {/* Top Headline Area (outside the main content box) */}
-            <div className="max-w-4xl mx-auto px-6 lg:px-8 text-center pb-12">
+            <div 
+                className="relative z-10 max-w-4xl mx-auto px-6 lg:px-8 text-center pb-12 transition-transform duration-300 ease-out"
+                style={{
+                    transform: `translate(${mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px)`
+                }}
+            >
                 <div className="relative inline-block">
                     <p className="font-headline text-1xl md:text-2xl text-gray-700 mb-3 absolute -top-20 left-1/2 transform -translate-x-1/2 rotate-[-5deg] elc">
                         So fast you'll get a ticket
@@ -59,14 +126,25 @@ const Homesection5 = () => {
                     <h2 className="font-headline text-4xl md:text-6xl leading-tight elc text-[#7A4B6D] font-extrabold   ">
                         Get paid in a <span className="text-purple-main">Flash</span>
                     </h2>
-                    {/* Lightning Bolt Doodles */}
-                    <span className="absolute top-0 right-[-60px] text-7xl md:text-6xl text-yellow-500">⚡</span>
-                    <span className="absolute top-[-20px] right-[-80px] text-4xl text-yellow-500 opacity-70">⚡</span>
+                    {/* Lightning Bolt Doodles with Parallax */}
+                    <span 
+                        className="absolute top-0 right-[-60px] text-7xl md:text-6xl text-yellow-500 transition-transform duration-500"
+                        style={{transform: `translate(${mousePosition.x * 0.08}px, ${mousePosition.y * 0.08}px)`}}
+                    >⚡</span>
+                    <span 
+                        className="absolute top-[-20px] right-[-80px] text-4xl text-yellow-500 opacity-70 transition-transform duration-700"
+                        style={{transform: `translate(${mousePosition.x * 0.12}px, ${mousePosition.y * 0.12}px)`}}
+                    >⚡</span>
                 </div>
             </div>
 
             {/* Main Content Area: Card and Text */}
-            <div className="max-w-7xl mx-auto px-6 lg:px-8">
+            <div 
+                className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 transition-transform duration-400 ease-out"
+                style={{
+                    transform: `translate(${mousePosition.x * 0.015}px, ${mousePosition.y * 0.015}px)`
+                }}
+            >
                 <div className="flex flex-col lg:flex-row items-center lg:items-start justify-between">
                     
                     {/* Left Column: Invoice Card */}
