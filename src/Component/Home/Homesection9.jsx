@@ -105,7 +105,7 @@ const Homesection9 = () => {
                 {/* CTA Button (Matches the style in the image) */}
                <a href="trypage"> <button 
                     className="px-10 py-4 font-semibold rounded-lg transition duration-200 
-                               bg-purple-main hover:bg-[#a52a2a] text-black text-xl shadow-lg mt-8 "
+                               bg-purple-main hover:bg-[#7A4B6D] text-black text-xl shadow-lg mt-8 "
                 >
                     Start now - It's free
                 </button></a>

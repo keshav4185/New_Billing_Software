@@ -37,8 +37,10 @@ function Tryapp() {
           <div className="flex items-center text-blue-500 font-semibold">
             <span className="text-xl mr-2">📄</span>
             <span>Sales</span>
-         
           </div>
+        <a href="trypage">  <button className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-800 transition duration-200 hover:{}">
+            Change App
+          </button></a>
         </div>
 
         <form className="space-y-6"> 

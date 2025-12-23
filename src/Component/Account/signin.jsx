@@ -148,13 +148,18 @@ const Signin = () => {
                         </div>
                     </div>
 
-                    {/* Sign In Button */}
+                    {/* Sign In Button with Enhanced Effects */}
                 <a href="/NavbarLogged">   <button type="submit"
-                        className="w-full px-4 py-3 text-white font-semibold rounded-lg transition duration-200 
-                                   bg-purple-dark hover:bg-purple-main shadow-md"
-                        style={{ backgroundColor: '#80628B' }} // Using the specific purple/maroon color from the image
+                        className="w-full px-4 py-3 text-white font-semibold rounded-lg transition-all duration-300 
+                                   bg-purple-dark hover:bg-purple-main shadow-lg hover:shadow-purple-500/50 hover:shadow-2xl 
+                                   transform hover:scale-105 hover:-translate-y-1 active:scale-95 relative overflow-hidden"
+                        style={{ 
+                            backgroundColor: '#80628B',
+                            background: 'linear-gradient(135deg, #80628B 0%, #764ba2 50%, #667eea 100%)'
+                        }}
                     >
-                        SIGN IN
+                        <span className="relative z-10">SIGN IN</span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg opacity-0 hover:opacity-20 transition-opacity duration-300"></div>
                     </button></a> 
                 </form>
 

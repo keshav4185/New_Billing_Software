@@ -16,7 +16,14 @@ import Welcomepage from './Pages/Home/TryPage/welcomepage';
 import Tryapppage from './Pages/Home/TryPage/tryapppage'; 
 import Sdashboardpage from './Pages/SDashboard/sdashboardpage';
 import Snewpage from './Pages/SDashboard/snewpage';
-import sorderpage from './Pages/SDashboard/sorderpage';
+import Sorderpage from './Pages/SDashboard/sorderpage';
+import Scustomerpage from './Pages/orderpage/scustomerpage';
+import Salesteampage from './Pages/orderpage/salesteampage';
+import Productpage from './Pages/Productpage/productpage';
+import ProductFormnew from './Pages/Productpage/productfrompage';
+import Toinvoicepage from './Pages/Invoicepage/Toinvoicepage';
+
+
 
 // Layout component with navbar and footer
 const LayoutWithNavbar = ({ children }) => (
@@ -47,7 +54,12 @@ function App() {
         {/* Dashboard routes without navbar and footer */}
         <Route path="/sdashboardpage" element={<Sdashboardpage />} />
         <Route path="/snewpage" element={<Snewpage />} />
-        <Route path="/sorderpage" element={<sorderpage />} />
+        <Route path="/sorderpage" element={<Sorderpage />} />
+        <Route path="/scustomerpage" element={<Scustomerpage />} />
+        <Route path="/salesteampage" element={<Salesteampage />} />
+        <Route path="/productpage" element={<Productpage />} />
+        <Route path="/productform" element={<ProductFormnew />} />
+        <Route path="/toinvoicepage" element={<Toinvoicepage />} />
       </Routes>
     </BrowserRouter>
   );
