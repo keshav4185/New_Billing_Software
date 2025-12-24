@@ -160,11 +160,7 @@ const Homesection5 = () => {
                         </p>
 
                         {/* Payment Logos (Simplified placeholders) */}
-                        <div className="flex flex-wrap justify-center lg:justify-start items-center space-x-6 text-2xl font-bold text-gray-500">
-                            <span className="py-2">adyen</span>
-                            <span className="py-2">PayPal</span>
-                            <span className="py-2">stripe</span>
-                        </div>
+                       
                     </div>
                 </div>
             </div>

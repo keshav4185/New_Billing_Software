@@ -39,7 +39,7 @@ const Navbar = () => {
                     {/* Logo and Desktop Navigation */}
                     <div className="flex items-center space-x-12  "> 
                         <Link to="/" className="text-2xl font-bold  text-[#7A4B6D] ">
-                            ODOO
+                            SMART
                         </Link>
 
                         {/* Desktop Menu */}

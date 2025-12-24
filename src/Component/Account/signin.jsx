@@ -96,13 +96,13 @@ const Signin = () => {
                 <div className="flex justify-center mb-6">
                     {/* Simplified SVG placeholder for Odoo purple logo */}
                     <svg className="h-6 w-auto" fill="#80628B" viewBox="0 0 100 24" xmlns="http://www.w3.org/2000/svg">
-                        <text x="50%" y="70%" fontSize="20" fontWeight="bold" textAnchor="middle">odoo</text>
+                        <text x="50%" y="70%" fontSize="20" fontWeight="bold" textAnchor="middle">Smart</text>
                     </svg>
                 </div>
 
                 {/* Info Alert Box */}
                 <div className="bg-blue-100/50 text-gray-700 p-4 rounded-lg mb-6 border border-blue-200">
-                    <p className="text-sm">Access and manage your documents and databases from odoo.com.</p>
+                    <p className="text-sm">Access and manage your documents and databases from Smart.com.</p>
                 </div>
 
                 <form className="space-y-6">

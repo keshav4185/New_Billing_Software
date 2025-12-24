@@ -1,137 +1,251 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { 
   MagnifyingGlassIcon, Cog6ToothIcon, 
   FunnelIcon, XMarkIcon, ChevronDownIcon,
   ListBulletIcon, TableCellsIcon,
-  ChevronLeftIcon
+  CloudArrowUpIcon, MapPinIcon, 
+  PhoneIcon, EnvelopeIcon, GlobeAltIcon
 } from '@heroicons/react/24/outline';
 
 const Customers = () => {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState('');
+  // View state: 'list' or 'form'
+  const [view, setView] = useState('list');
+  
+  // Data State: Stores the list of saved customers
+  const [customerList, setCustomerList] = useState([]);
+  
+  // Tracks if we are editing an existing customer or creating a new one
+  const [editingId, setEditingId] = useState(null);
 
-  // Data modeled after image_58daa7.png
-  const [customerData] = useState([
-    { id: 1, name: 'Deco Addict', email: 'info@agrolait.com', phone: '(603)-996-3829', country: 'United States', tags: ['pink-5', 'blue-5', 'purple-2', 'orange-15', 'gray-1'] },
-    { id: 2, name: 'OpenWood', email: 'ErikNFrench@armyspy.com', phone: '+352 123 456 789', country: 'Liechtenstein', tags: ['pink-4', 'blue-1'] },
-    { id: 3, name: 'Azure Interior', email: 'vauxoo@yourcompany.example.com', phone: '+58 212 681 0538', country: 'United States', tags: ['yellow-2', 'pink-3', 'blue-2', 'purple-2'] },
-    { id: 4, name: 'LightsUp', email: 'lightsup@example.com', phone: '+372 123 1234', country: 'Montenegro', tags: ['pink-1'] },
-  ]);
+  // Form State: storage for the customer data
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    city: '',
+    isCompany: true,
+    image: null
+  });
 
-  const filteredCustomers = customerData.filter(c => 
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    c.email.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  // Helper to render activity tags from image_58daa7.png
-  const renderTag = (tag) => {
-    const [color, value] = tag.split('-');
-    const colorMap = {
-      pink: 'bg-pink-200 text-pink-700',
-      blue: 'bg-blue-200 text-blue-700',
-      purple: 'bg-purple-200 text-purple-700',
-      orange: 'bg-orange-200 text-orange-700',
-      gray: 'bg-gray-200 text-gray-700',
-      yellow: 'bg-yellow-200 text-yellow-700'
-    };
-    return (
-      <span key={tag} className={`${colorMap[color]} px-1.5 py-0.5 rounded text-[10px] font-bold flex items-center gap-0.5`}>
-        {color === 'blue' ? '★' : color === 'pink' ? '✎' : ''} {value}
-      </span>
-    );
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFormData(prev => ({...prev, image: e.target.result}));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleNew = () => {
+    setEditingId(null);
+    setFormData({ name: '', email: '', phone: '', city: '', isCompany: true, image: null });
+    setView('form');
+  };
+
+  const handleEdit = (customer) => {
+    setEditingId(customer.id);
+    setFormData({ ...customer });
+    setView('form');
+  };
+
+  const handleSave = () => {
+    if (!formData.name) return alert("Please enter a customer name.");
+    
+    if (editingId) {
+      // Update existing customer
+      setCustomerList(customerList.map(c => c.id === editingId ? { ...formData } : c));
+    } else {
+      // Add new customer
+      const newCustomer = { 
+        ...formData, 
+        id: Date.now(), 
+        country: 'United States' 
+      };
+      setCustomerList([newCustomer, ...customerList]);
+    }
+    
+    setView('list');
+    setEditingId(null);
+  };
+
+  const handleDiscard = () => {
+    setView('list');
+    setEditingId(null);
   };
 
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-[13px] text-slate-700 overflow-hidden">
       
-      {/* CONTROL BAR - Matches image_58daa7.png with added Back Button */}
-      <div className="flex items-center justify-between px-4 py-2 bg-white border-b shrink-0">
-        <div className="flex items-center gap-3">
-          {/* <button className="bg-[#714B67] text-white px-4 py-1 rounded font-bold text-[14px] hover:bg-[#5a3c52]">New</button> */}
-          
-          <div className="flex items-center gap-1 text-[18px] text-slate-600 font-medium">
-            {/* Back Button added here */}
-            <button 
-              onClick={() => navigate(-1)} 
-              className="p-1 hover:bg-slate-100 rounded-full transition-colors mr-1"
-              title="Go Back"
-            >
-              <ChevronLeftIcon className="w-5 h-5 text-slate-500" />
-            </button>
-            <span>Customers</span>
-            <Cog6ToothIcon className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600" />
-          </div>
+      {/* --- HEADER CONTROL BAR --- */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 py-2 bg-white border-b shrink-0 gap-3">
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          {view === 'list' ? (
+            <>
+              <button onClick={() => window.history.back()} className="bg-white border border-slate-300 px-4 py-1 rounded font-bold hover:bg-slate-50">
+                Back
+              </button>
+              <button 
+                onClick={handleNew}
+                className="bg-[#714B67] text-white px-4 py-1 rounded font-bold text-[14px] hover:bg-[#5a3c52]"
+              >
+                New
+              </button>
+              <div className="flex items-center gap-1 text-[18px] text-slate-600 font-medium">
+                <span>Customers</span>
+                <Cog6ToothIcon className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex gap-2">
+                <button onClick={handleSave} className="bg-[#714B67] text-white px-4 py-1 rounded font-bold hover:bg-[#5a3c52]">
+                  Save
+                </button>
+                <button onClick={handleDiscard} className="bg-white border border-slate-300 px-4 py-1 rounded font-bold hover:bg-slate-50">
+                  Discard
+                </button>
+              </div>
+              <div className="flex items-center gap-1 text-[18px] text-slate-500 font-medium ml-0 sm:ml-4">
+                <span className="cursor-pointer hover:text-[#714B67]" onClick={handleDiscard}>Customers</span>
+                <span className="text-slate-300 mx-1">/</span>
+                <span className="text-slate-900 font-bold">{formData.name || 'New'}</span>
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative flex items-center border-b border-slate-300 w-80 pb-0.5 group">
-            <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 mr-2" />
-            {/* <div className="bg-slate-100 px-2 py-0.5 rounded text-[11px] flex items-center gap-1 border border-slate-200 whitespace-nowrap text-slate-600">
-              <FunnelIcon className="w-3 h-3 text-[#714B67]" />
-              Customer Invoices
-              <XMarkIcon className="w-3 h-3 cursor-pointer hover:text-slate-800" />
-            </div> */}
-            <input 
-              type="text" 
-              placeholder="Search..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="ml-2 outline-none w-full italic text-slate-700 bg-transparent" 
-            />
-            <ChevronDownIcon className="w-3 h-3 text-slate-400" />
-          </div>
-          
-          {/* <div className="flex items-center gap-3 text-slate-500 border-l pl-4">
-            <div className="flex gap-1">
-              <ListBulletIcon className="w-5 h-5 p-1 rounded bg-slate-200 text-slate-900" />
-              <TableCellsIcon className="w-5 h-5 p-1 cursor-pointer hover:bg-slate-100 rounded" />
+        {view === 'list' && (
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="relative flex items-center border-b border-slate-300 w-full sm:w-80 pb-0.5">
+              <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 mr-2" />
+              <input type="text" placeholder="Search..." className="outline-none w-full italic bg-transparent" />
+              <ChevronDownIcon className="w-3 h-3 text-slate-400" />
             </div>
-          </div> */}
-        </div>
+           
+          </div>
+        )}
       </div>
 
-      {/* TABLE AREA - Matches image_58daa7.png */}
-      <div className="flex-1 overflow-auto px-4">
-        <table className="w-full text-left border-separate border-spacing-0">
-          <thead>
-            <tr className="text-slate-900 font-bold border-b sticky top-0 bg-white z-10">
-              <th className="py-2 w-10 border-b"><input type="checkbox" className="rounded border-slate-300" /></th>
-              <th className="py-2 border-b">Name</th>
-              <th className="py-2 border-b">Email</th>
-              <th className="py-2 border-b">Phone</th>
-              <th className="py-2 border-b">Activities</th>
-              <th className="py-2 border-b">Country</th>
-              <th className="py-2 border-b text-right pr-4"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredCustomers.map((c) => (
-              <tr key={c.id} className="hover:bg-slate-50 border-b group cursor-pointer">
-                <td className="py-3 border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
-                  <input type="checkbox" className="rounded border-slate-300" />
-                </td>
-                <td className="py-3 border-b border-slate-100 flex items-center gap-2">
-                  <img src={`https://ui-avatars.com/api/?name=${c.name}&background=random`} alt="" className="w-6 h-6 rounded" />
-                  <span className="text-slate-900">{c.name}</span>
-                </td>
-                <td className="py-3 border-b border-slate-100 text-blue-600">{c.email}</td>
-                <td className="py-3 border-b border-slate-100">{c.phone}</td>
-                <td className="py-3 border-b border-slate-100">
-                   <div className="w-5 h-5 border border-slate-300 rounded-full flex items-center justify-center">
-                     <div className="w-3 h-3 bg-slate-200 rounded-full"></div>
-                   </div>
-                </td>
-                <td className="py-3 border-b border-slate-100">{c.country}</td>
-                <td className="py-3 border-b border-slate-100 text-right pr-4">
-                  <div className="flex justify-end gap-1">
-                    {c.tags.map(tag => renderTag(tag))}
+      {/* --- MAIN CONTENT AREA --- */}
+      <div className="flex-1 overflow-y-auto bg-slate-50">
+        {view === 'list' ? (
+          customerList.length === 0 ? (
+            /* EMPTY STATE */
+            <div className="h-full flex flex-col items-center justify-center bg-white">
+              <div className="w-40 h-40 bg-[#714B67]/5 rounded-full flex items-center justify-center mb-8">
+                <div className="w-24 h-32 border-4 border-[#714B67]/20 rounded-lg bg-white flex flex-col p-3 gap-2">
+                  <div className="w-8 h-8 rounded-full bg-[#714B67]/10 self-center mb-2"></div>
+                  <div className="w-full h-1 bg-slate-100"></div>
+                  <div className="w-full h-1 bg-slate-100"></div>
+                </div>
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">Create a new customer in your address book</h2>
+              {/* <p className="text-slate-500">Odoo helps you easily track all activities related to a customer.</p> */}
+            </div>
+          ) : (
+            /* DATA TABLE VIEW */
+            <div className="bg-white h-full px-2 sm:px-4">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-separate border-spacing-0 min-w-[600px]">
+                  <thead>
+                    <tr className="text-slate-900 font-bold border-b sticky top-0 bg-white">
+                      <th className="py-3 border-b w-10"><input type="checkbox" /></th>
+                      <th className="py-3 border-b">Name</th>
+                      <th className="py-3 border-b hidden sm:table-cell">Email</th>
+                      <th className="py-3 border-b hidden md:table-cell">Phone</th>
+                      <th className="py-3 border-b hidden lg:table-cell">City</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerList.map((c) => (
+                      <tr 
+                        key={c.id} 
+                        onClick={() => handleEdit(c)}
+                        className="hover:bg-slate-50 border-b cursor-pointer group transition-colors"
+                      >
+                        <td className="py-3 border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
+                          <input type="checkbox" />
+                        </td>
+                        <td className="py-3 border-b border-slate-100 font-medium text-slate-900 group-hover:text-[#714B67]">{c.name}</td>
+                        <td className="py-3 border-b border-slate-100 text-blue-600 hidden sm:table-cell">{c.email}</td>
+                        <td className="py-3 border-b border-slate-100 hidden md:table-cell">{c.phone}</td>
+                        <td className="py-3 border-b border-slate-100 hidden lg:table-cell">{c.city}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )
+        ) : (
+          /* FORM VIEW */
+          <div className="p-4 sm:p-6 lg:p-12">
+            <div className="max-w-5xl mx-auto bg-white shadow-sm border rounded-sm p-4 sm:p-6 lg:p-10">
+              <div className="flex flex-col lg:flex-row justify-between items-start mb-6 lg:mb-10 gap-6">
+                <div className="flex-1 w-full">
+                  <div className="flex gap-1 mb-6">
+                    <button 
+                      onClick={() => setFormData({...formData, isCompany: true})} 
+                      className={`px-4 py-1 border text-[12px] font-bold rounded-l ${formData.isCompany ? 'bg-slate-800 text-white' : 'bg-white'}`}
+                    >Company</button>
+                    <button 
+                      onClick={() => setFormData({...formData, isCompany: false})} 
+                      className={`px-4 py-1 border text-[12px] font-bold rounded-r ${!formData.isCompany ? 'bg-slate-800 text-white' : 'bg-white'}`}
+                    >Individual</button>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                  <input 
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Customer Name" 
+                    className="text-2xl sm:text-3xl lg:text-4xl font-bold w-full outline-none border-b border-transparent focus:border-teal-500 pb-2 placeholder:text-slate-200" 
+                  />
+                </div>
+                <div className="w-24 h-24 sm:w-32 sm:h-32 border-2 border-dashed border-slate-200 rounded flex flex-col items-center justify-center text-slate-300 cursor-pointer hover:border-slate-300 relative overflow-hidden shrink-0">
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={handleImageUpload}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {formData.image ? (
+                    <img src={formData.image} alt="Customer" className="w-full h-full object-cover rounded" />
+                  ) : (
+                    <>
+                      <CloudArrowUpIcon className="w-6 h-6 sm:w-8 sm:h-8" />
+                      <span className="text-[9px] sm:text-[10px] mt-1 sm:mt-2 font-bold uppercase text-center px-1 sm:px-2">Upload Image</span>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-x-20 lg:gap-y-6">
+                <div className="space-y-4">
+                  <label className="text-[10px] uppercase font-bold text-[#714B67]">Address</label>
+                  <input placeholder="Street..." className="w-full border-b outline-none py-1 focus:border-teal-500" />
+                  <input name="city" value={formData.city} onChange={handleInputChange} placeholder="City" className="w-full border-b outline-none py-1 focus:border-teal-500" />
+                </div>
+                <div className="space-y-4 pt-0 lg:pt-6">
+                  <div className="flex items-center border-b py-1 group">
+                    <PhoneIcon className="w-4 h-4 mr-3 text-slate-400 group-focus-within:text-teal-500" />
+                    <input name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Phone" className="w-full outline-none" />
+                  </div>
+                  <div className="flex items-center border-b py-1 group">
+                    <EnvelopeIcon className="w-4 h-4 mr-3 text-slate-400 group-focus-within:text-teal-500" />
+                    <input name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="w-full outline-none" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

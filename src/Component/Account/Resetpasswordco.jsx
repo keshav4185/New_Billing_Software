@@ -133,7 +133,7 @@ const Resetpasswordco = () => {
                 <div className="flex justify-center mb-10">
                     {/* Simplified SVG placeholder for Odoo purple logo */}
                     <svg className="h-6 w-auto" fill="#80628B" viewBox="0 0 100 24" xmlns="http://www.w3.org/2000/svg">
-                        <text x="50%" y="70%" fontSize="20" fontWeight="bold" textAnchor="middle">odoo</text>
+                        <text x="50%" y="70%" fontSize="20" fontWeight="bold" textAnchor="middle">Smart</text>
                     </svg>
                 </div>
 

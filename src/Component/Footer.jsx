@@ -18,7 +18,7 @@ const Footer = () => {
                 <div className="flex justify-center mb-8">
                     <svg className="h-6 w-auto" fill="white" viewBox="0 0 100 24" xmlns="http://www.w3.org/2000/svg">
                         {/* Simplified Odoo Logo Path - represents the white text logo */}
-                        <text x="50%" y="70%" fontSize="20" fontWeight="bold" textAnchor="middle">odoo</text>
+                        <text x="50%" y="70%" fontSize="20" fontWeight="bold" textAnchor="middle">Smart</text>
                     </svg>
                 </div>
 
@@ -86,10 +86,10 @@ const Footer = () => {
 
                         <div className="border-t border-gray-600 pt-4">
                             <p className="text-sm text-gray-400 mb-4">
-                                Odoo is a suite of open source business apps that cover all your company needs: CRM, eCommerce, accounting, inventory, point of sale, project management, etc.
+                                Smart is a suite of open source business apps that cover all your company needs: CRM, eCommerce, accounting, inventory, point of sale, project management, etc.
                             </p>
                             <p className="text-sm text-gray-400 mb-6">
-                                Odoo's unique value proposition is to be at the same time very easy to use and fully integrated.
+                                Smart unique value proposition is to be at the same time very easy to use and fully integrated.
                             </p>
                             
                             {/* Social Media Links (Using simple text/emojis as placeholders for complex SVGs) */}
@@ -106,7 +106,7 @@ const Footer = () => {
 
                 {/* Bottom Bar / Copyright */}
                 <div className="mt-12 pt-6 pb-4 border-t border-gray-700 text-center text-sm text-gray-400">
-                    Website made with <span className="font-bold text-white">odoo</span>
+                    Website is develop by keshav golande <span className="font-semi-bold text-white">SMART</span>
                 </div>
             </div>
         </footer>

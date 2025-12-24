@@ -130,7 +130,7 @@ const Homesection1 = () => {
             
             {/* Description */}
             <p className="text-xl text-gray-600 max-w-2xl mb-12">
-                Odoo Invoicing makes it easy to create professional invoices and customize them to your liking.
+                Smart Invoicing makes it easy to create professional invoices and customize them to your liking.
             </p>
 
             {/* Action Buttons */}

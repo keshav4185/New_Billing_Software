@@ -16,7 +16,7 @@ import Welcomepage from './Pages/Home/TryPage/welcomepage';
 import Tryapppage from './Pages/Home/TryPage/tryapppage'; 
 import Sdashboardpage from './Pages/SDashboard/sdashboardpage';
 import Snewpage from './Pages/SDashboard/snewpage';
-import Sorderpage from './Pages/SDashboard/sorderpage';
+import Sorderpage from './Pages/orderpage/sorderpage';
 import Scustomerpage from './Pages/orderpage/scustomerpage';
 import Salesteampage from './Pages/orderpage/salesteampage';
 import Productpage from './Pages/Productpage/productpage';

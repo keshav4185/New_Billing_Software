@@ -38,8 +38,8 @@ const Welcome = () => {
         </div>
 
         <div className="mt-8">
-          <h1 className="text-[3.8rem] font-bold text-[#714B67] leading-[1.05] mb-6 tracking-tighter">
-            Welcome to <br /> Odoo
+          <h1 className="text-[3.8rem] font-bold text-[#714B67] leading-[1.05] mb-6 tracking-tighter text-center">
+            Welcome to <br />Smart
           </h1>
           <div className="space-y-4">
             <p className="text-gray-500 text-lg font-medium tracking-wide">

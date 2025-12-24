@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   MagnifyingGlassIcon, TableCellsIcon, 
@@ -12,13 +12,21 @@ const SalesDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [ordersDropdownOpen, setOrdersDropdownOpen] = useState(false);
   const [invoiceDropdownOpen, setInvoiceDropdownOpen] = useState(false);
+  const [selectedQuotation, setSelectedQuotation] = useState(null);
+  const [showModal, setShowModal] = useState(false);
   
-  const [quotations] = useState([
-    { id: 'S00006', date: '18 Dec, 12:17 pm', customer: 'Keshav', salesperson: 'Keshav', total: 20.00, status: 'Quotation' },
-    { id: 'S00005', date: '18 Dec, 12:15 pm', customer: 'Keshav', salesperson: 'Keshav', total: 0.00, status: 'Sales Order' },
-    { id: 'S00004', date: '18 Dec, 11:57 am', customer: 'Keshav', salesperson: 'Keshav', total: 32.00, status: 'Sales Order' },
-    { id: 'S00001', date: '18 Dec, 11:02 am', customer: 'Keshav', salesperson: 'Keshav', total: 736.00, status: 'Sales Order' },
-  ]);
+  const [quotations, setQuotations] = useState([]);
+
+  const deleteQuotation = (id) => {
+    const updatedQuotations = quotations.filter(q => q.id !== id);
+    setQuotations(updatedQuotations);
+    localStorage.setItem('quotations', JSON.stringify(updatedQuotations));
+  };
+
+  useEffect(() => {
+    const savedQuotations = JSON.parse(localStorage.getItem('quotations') || '[]');
+    setQuotations(savedQuotations);
+  }, []);
 
   // Updated Filter logic to handle name and ID simultaneously
   const filteredData = useMemo(() => {
@@ -126,7 +134,7 @@ const SalesDashboard = () => {
             New
           </button>
           
-          <div className="flex items-center gap-1 text-[16px] md:text-[18px] text-slate-600">
+          <div className="flex items-center gap-1 text-[18px] md:text-[20px] text-slate-600">
             <span className="font-medium">Quotations</span>
             <Cog6ToothIcon className="w-4 h-4 text-slate-400 cursor-pointer" />
           </div>
@@ -141,7 +149,7 @@ const SalesDashboard = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search by name or ID..." 
-              className="outline-none w-full italic text-slate-700 bg-transparent text-[13px]" 
+              className="outline-none w-full italic text-slate-700 bg-transparent text-[14px]" 
             />
             {/* Added Clear Button for UX */}
             {searchQuery && (
@@ -167,13 +175,14 @@ const SalesDashboard = () => {
         <div className="px-4 min-w-max sm:min-w-full">
           <table className="w-full text-left border-separate border-spacing-0">
             <thead className="sticky top-0 bg-white z-10 shadow-[0_1px_0_0_rgba(226,232,240,1)]">
-              <tr className="text-slate-900 font-bold border-b text-[11px] uppercase tracking-wider">
+              <tr className="text-slate-900 font-bold border-b text-[12px] uppercase tracking-wider">
                 <th className="py-3 w-10 px-2"><input type="checkbox" className="rounded border-gray-300" /></th>
                 <th className="py-3 px-2">Number</th>
                 <th className="py-3 px-2">Creation Date</th>
                 <th className="py-3 px-2">Customer</th>
                 <th className="py-3 px-2 text-right pr-4">Total</th>
                 <th className="py-3 px-2 pl-4">Status</th>
+                <th className="py-3 px-2 w-16">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -181,8 +190,11 @@ const SalesDashboard = () => {
                 filteredData.map((q) => (
                   <tr 
                     key={q.id} 
-                    className="hover:bg-slate-50 cursor-pointer border-b group transition-colors text-[13px]"
-                    onClick={() => navigate('/snewpage', { state: { order: q } })}
+                    className="hover:bg-slate-50 cursor-pointer border-b group transition-colors text-[14px]"
+                    onClick={() => {
+                      setSelectedQuotation(q);
+                      setShowModal(true);
+                    }}
                   >
                     <td className="py-3 px-2 border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" className="rounded border-gray-300" />
@@ -192,15 +204,24 @@ const SalesDashboard = () => {
                     <td className="py-3 px-2 border-b border-slate-100">{q.customer}</td>
                     <td className="py-3 px-2 border-b border-slate-100 text-right pr-4 font-medium text-blue-600">₹ {q.total.toFixed(2)}</td>
                     <td className="py-3 px-2 border-b border-slate-100 pl-4">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold text-white uppercase whitespace-nowrap ${q.status === 'Quotation' ? 'bg-teal-500' : 'bg-[#714B67]'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold text-white uppercase whitespace-nowrap ${q.status === 'Quotation' ? 'bg-teal-500' : 'bg-[#714B67]'}`}>
                         {q.status}
                       </span>
+                    </td>
+                    <td className="py-3 px-2 border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
+                      <button 
+                        onClick={() => deleteQuotation(q.id)}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Delete"
+                      >
+                        <XMarkIcon className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="6" className="py-10 text-center text-slate-400 italic">
+                  <td colSpan="7" className="py-10 text-center text-slate-400 italic">
                     No results found for "{searchQuery}"
                   </td>
                 </tr>
@@ -209,6 +230,95 @@ const SalesDashboard = () => {
           </table>
         </div>
       </div>
+
+      {/* Data Info Modal */}
+      {showModal && selectedQuotation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b">
+              <h2 className="text-xl font-bold text-slate-900">Quotation Details</h2>
+              <button 
+                onClick={() => setShowModal(false)}
+                className="text-slate-400 hover:text-slate-600"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Quotation Number</label>
+                  <p className="text-lg font-bold text-slate-900">{selectedQuotation.id}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Status</label>
+                  <p>
+                    <span className={`px-3 py-1 rounded-full text-xs font-bold text-white uppercase ${selectedQuotation.status === 'Quotation' ? 'bg-teal-500' : 'bg-[#714B67]'}`}>
+                      {selectedQuotation.status}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Customer</label>
+                  <p className="text-slate-900 font-medium">{selectedQuotation.customer}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Creation Date</label>
+                  <p className="text-slate-900">{selectedQuotation.date}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-600">Total Amount</label>
+                  <p className="text-xl font-bold text-blue-600">₹ {selectedQuotation.total.toFixed(2)}</p>
+                </div>
+                {selectedQuotation.salesperson && (
+                  <div>
+                    <label className="text-sm font-medium text-slate-600">Salesperson</label>
+                    <p className="text-slate-900">{selectedQuotation.salesperson}</p>
+                  </div>
+                )}
+              </div>
+              
+              {selectedQuotation.items && selectedQuotation.items.length > 0 && (
+                <div className="mt-6">
+                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Items</h3>
+                  <div className="border rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-slate-50">
+                        <tr className="text-left text-sm font-medium text-slate-600">
+                          <th className="px-4 py-2">Product</th>
+                          <th className="px-4 py-2">Quantity</th>
+                          <th className="px-4 py-2">Unit Price</th>
+                          <th className="px-4 py-2 text-right">Total</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedQuotation.items.map((item, index) => (
+                          <tr key={index} className="border-t text-sm">
+                            <td className="px-4 py-2 font-medium">{item.product}</td>
+                            <td className="px-4 py-2">{item.quantity}</td>
+                            <td className="px-4 py-2">₹ {item.unitPrice.toFixed(2)}</td>
+                            <td className="px-4 py-2 text-right font-medium">₹ {(item.quantity * item.unitPrice).toFixed(2)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex justify-end gap-3 mt-6 pt-4 border-t">
+                <button 
+                  onClick={() => setShowModal(false)}
+                  className="px-4 py-2 text-slate-600 border border-slate-300 rounded hover:bg-slate-50"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
