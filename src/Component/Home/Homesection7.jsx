@@ -214,7 +214,7 @@ const Homesection7 = () => {
             <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
                 
                 {/* Headline: "All the features done right." */}
-                <h2 className="text-5xl md:text-6xl font-headline text-[#7A4B6D] leading-tight mb-12 font-extrabold">
+                <h2 className="text-4xl md:text-4xl font-headline text-green-700  leading-tight mb-12 font-extrabold">
                     All the <span className="highlight-bg pb-1 inline-block">features</span> done right.
                 </h2>
                 

@@ -39,7 +39,7 @@ const FeaturesSection3 = () => {
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
                 
                 {/* Title: "Handle payments" */}
-                <h2 className=" font-extrabold text-3xl md:text-6xl font-script text-purple-main leading-tight mb-16 text-center md:text-left font-handwriting text-[#7A4B6D]">
+                <h2 className=" font-extrabold text-3xl md:text-4xl font-script text-purple-main leading-tight mb-16 text-center md:text-left font-handwriting text-green-700">
                     Handle payments
                 </h2>
 

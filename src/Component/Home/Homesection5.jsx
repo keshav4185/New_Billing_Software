@@ -123,7 +123,7 @@ const Homesection5 = () => {
                         So fast you'll get a ticket
                         <span className="block text-2xl mt-1">↑</span>
                     </p>
-                    <h2 className="font-headline text-4xl md:text-6xl leading-tight elc text-[#7A4B6D] font-extrabold   ">
+                    <h2 className="font-headline text-4xl md:text-4xl leading-tight elc text-green-700  font-extrabold   ">
                         Get paid in a <span className="text-purple-main">Flash</span>
                     </h2>
                     {/* Lightning Bolt Doodles with Parallax */}

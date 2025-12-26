@@ -28,7 +28,7 @@ const Homesection3 = () => {
                         <span className="text-sm font-semibold uppercase text-blue-600 tracking-wider">
                             Advanced Functionality
                         </span>
-                        <h2 className="text-4xl font-extrabold text-[#7A4B6D] leading-tight elc">
+                        <h2 className="text-4xl font-extrabold text-green-700  leading-tight elc">
                             Automate Your Payments & Reconciliation
                         </h2>
                         <p className="text-xl text-gray-600">

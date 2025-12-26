@@ -94,10 +94,10 @@ const Homesection9 = () => {
                     >★</span>
                     
                     {/* Headline: "Reignite the spark of accomplishment" */}
-                    <h2 className="text-3xl md:text-8xl font-headline text-[#7A4B6D] leading-none elc font-extrabold">
+                    <h2 className="text-4xl md:text-4xl font-headline text-green-700  leading-none elc font-extrabold">
                         Reignite the <span className="text-purple-main">spark</span>
                     </h2>
-                    <h2 className="text-4xl md:text-8xl font-headline text-teal-highlight leading-none elc text-[#7A4B6D]  font-extrabold">
+                    <h2 className="text-4xl md:text-4xl font-headline text-teal-highlight leading-none elc text-green-700  font-extrabold">
                         of accomplishment
                     </h2>
                 </div>
@@ -105,7 +105,7 @@ const Homesection9 = () => {
                 {/* CTA Button (Matches the style in the image) */}
                <a href="trypage"> <button 
                     className="px-10 py-4 font-semibold rounded-lg transition duration-200 
-                               bg-purple-main hover:bg-[#7A4B6D] text-black text-xl shadow-lg mt-8 "
+                               bg-purple-main hover:bg-indigo-200  text-black text-xl shadow-lg mt-8 "
                 >
                     Start now - It's free
                 </button></a>

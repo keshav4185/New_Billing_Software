@@ -81,10 +81,10 @@ const FeaturesSection1 = () => {
             >
                 
                 {/* Main Headline */}
-                <h1 className="text-3xl md:text-7xl font-handwriting text-[#7A4B6D] leading-tight mb-4 font-extrabold drop-shadow-lg">
+                <h1 className="text-3xl md:text-7xl font-handwriting text-green-700 leading-tight mb-4 font-extrabold drop-shadow-lg">
                     The <span className="text-purple-main">Invoicing</span>
                 </h1>
-                <h1 className="text-3xl md:text-7xl font-handwriting text-[#7A4B6D] leading-tight mb-8 font-extrabold drop-shadow-lg">
+                <h1 className="text-3xl md:text-7xl font-handwriting text-green-700 leading-tight mb-8 font-extrabold drop-shadow-lg">
                     Features You Need
                 </h1>
                 
@@ -95,10 +95,10 @@ const FeaturesSection1 = () => {
 
                 {/* Call-to-Action Buttons */}
                 <div className="flex justify-center space-x-4">
-                    <a href="trypage"><Button className="shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" outline>
+                    <a href="trypage"><Button className="shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:bg-indigo-400 hover:text-white" outline>
                         Try It Free
                     </Button></a>
-                    <Button className="shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                    <Button className="shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:bg-indigo-400 hover:text-white">
                         Watch Demo
                     </Button>
                 </div>

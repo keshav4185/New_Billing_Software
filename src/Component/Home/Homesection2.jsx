@@ -26,7 +26,7 @@ const Homesection2 = () => {
             <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
                 
                 {/* Section Header */}
-                <h2 className="text-4xl font-extrabold mb-4 elc text-[#7A4B6D] ">
+                <h2 className="text-4xl font-extrabold mb-4 elc text-green-700  ">
                     Everything You Need to Manage Billing
                 </h2>
                 <p className="text-xl text-gray-600 mb-12 max-w-3xl mx-auto">

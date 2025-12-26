@@ -23,6 +23,28 @@ const NewQuotation = () => {
   const paymentRef = useRef(null);
   const [orderLines, setOrderLines] = useState([]);
 
+  // --- NEW FUNCTIONALITY START: Product List Search ---
+  const [availableProducts, setAvailableProducts] = useState([]);
+  const [activeSearchId, setActiveSearchId] = useState(null);
+
+  useEffect(() => {
+    // Fetches the product list you saved in your products component
+    const saved = JSON.parse(localStorage.getItem('my_products') || '[]');
+    setAvailableProducts(saved);
+  }, []);
+
+  const handleProductSelect = (lineId, productObj) => {
+    setOrderLines(orderLines.map(line => 
+      line.id === lineId ? { 
+        ...line, 
+        product: productObj.name, 
+        unitPrice: parseFloat(productObj.price) || 0 
+      } : line
+    ));
+    setActiveSearchId(null); // Close dropdown after selection
+  };
+  // --- NEW FUNCTIONALITY END ---
+
   const paymentTerms = ['Immediate Payment', '15 Days', '30 Days', '45 Days'];
 
   useEffect(() => {
@@ -428,7 +450,41 @@ const NewQuotation = () => {
                         {!isConfirmed && <TrashIcon onClick={() => deleteLine(line.id)} className="w-2 h-2 sm:w-3 sm:h-3 text-red-300 opacity-0 group-hover:opacity-100 cursor-pointer" />}
                       </div>
                     </td>
-                    <td className="py-1 sm:py-2 pl-1 sm:pl-2"><input disabled={isConfirmed} type="text" value={line.product} onChange={(e) => updateLine(line.id, 'product', e.target.value)} className="w-full outline-none bg-transparent text-teal-700 text-xs sm:text-sm" placeholder="Product" /></td>
+                    
+                    {/* UPDATED PRODUCT CELL WITH DROPDOWN */}
+                    <td className="py-1 sm:py-2 pl-1 sm:pl-2 relative">
+                      <input 
+                        disabled={isConfirmed} 
+                        type="text" 
+                        value={line.product} 
+                        onFocus={() => !isConfirmed && setActiveSearchId(line.id)}
+                        onBlur={() => setTimeout(() => setActiveSearchId(null), 150)}
+                        onChange={(e) => {
+                          updateLine(line.id, 'product', e.target.value);
+                          setActiveSearchId(line.id);
+                        }} 
+                        className="w-full outline-none bg-transparent text-teal-700 text-xs sm:text-sm" 
+                        placeholder="Product" 
+                      />
+                      {/* Product Selection List */}
+                      {!isConfirmed && activeSearchId === line.id && line.product.length > 0 && (
+                        <div className="absolute top-full left-0 w-full bg-white border border-slate-200 shadow-xl z-[999] rounded-b overflow-hidden">
+                          {availableProducts
+                            .filter(p => p.name.toLowerCase().includes(line.product.toLowerCase()))
+                            .map(prod => (
+                              <div 
+                                key={prod.id}
+                                onMouseDown={() => handleProductSelect(line.id, prod)}
+                                className="px-3 py-2 hover:bg-slate-50 cursor-pointer flex justify-between items-center text-xs"
+                              >
+                                <span className="font-bold text-slate-700">{prod.name}</span>
+                                <span className="text-teal-600 font-bold">₹{prod.price}</span>
+                              </div>
+                            ))}
+                        </div>
+                      )}
+                    </td>
+
                     <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.quantity} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'quantity', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
                     <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.unitPrice} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'unitPrice', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
                     <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.taxes} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'taxes', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
@@ -490,4 +546,4 @@ const NewQuotation = () => {
   );
 };
 
-export default NewQuotation;
+export default NewQuotation;  

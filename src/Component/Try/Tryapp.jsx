@@ -24,7 +24,7 @@ function Tryapp() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-16 pb-16">
       <header className="text-center mb-10">
-        <h1 className="text-4xl font-extrabold" style={{  color: '#7A4B6D' }}>
+        <h1 className="text-4xl font-extrabold text-green-700 ">
           Get Started
         </h1>
         <p className="text-gray-500 mt-2">Free instant access. No credit card required.</p>
@@ -124,9 +124,7 @@ function Tryapp() {
           <a href="/Welcome"> <button
               type="button" 
               onClick={handleStartNowClick} // Triggers the navigation to /welcome
-              className="w-full max-w-xs mx-auto block px-6 py-3 text-white font-semibold rounded-lg shadow-md transition duration-200"
-              style={{ backgroundColor: '#80628B' }}
-            >
+              className="w-full max-w-xs mx-auto block px-6 py-3 font-semibold rounded-lg shadow-md transition duration-200 border-2 hover:bg-green-700 text-black hover:bg-indigo-400 hover:text-white">
               Start Now
             </button></a> 
           </div>

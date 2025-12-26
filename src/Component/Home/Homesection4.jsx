@@ -69,7 +69,7 @@ const Homesection4 = () => {
                 
                 {/* Right Column: Text and CTA */}
                 <div className="lg:w-1/2 w-full lg:pl-16 lg:text-left text-center">
-                    <h2 className="text-5xl font-headline text-purple-main leading-tight mb-6 elc text-[#7A4B6D]  font-extrabold">
+                    <h2 className="text-4xl font-headline text-purple-main leading-tight mb-6 elc text-green-700  font-extrabold">
                         Your invoices <span className="highlight-bg pb-1 inline-block">in your pocket</span>
                     </h2>
                     

@@ -71,10 +71,10 @@ const Homesection6 = () => {
             <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
                 
                 {/* Headline: Adjusted font sizes for better responsiveness and removed non-standard 'elc' class */}
-                <h2 className="text-4xl md:text-5xl font-headline text-[#7A4B6D]  leading-tight mb-2 elc font-extrabold">
+                <h2 className="text-4xl md:text-4xl font-headline text-green-700   leading-tight mb-2 elc font-extrabold">
                     Connect your bank <span className="text-teal-highlight">☑️</span>
                 </h2>
-                <h3 className="text-5xl md:text-6xl font-headline leading-tight mb-8 elc text-[#7A4B6D] font-extrabold">
+                <h3 className="text-5xl md:text-4xl font-headline leading-tight mb-8 elc text-green-700 font-extrabold">
                     <span className="text-purple-main">⚙️</span> Automate <span className="highlight-bg pb-1 inline-block">follow-ups</span>
                 </h3>
                 

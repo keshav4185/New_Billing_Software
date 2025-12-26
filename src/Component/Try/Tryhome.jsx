@@ -37,7 +37,7 @@ const Tryhome = () => {
       
       {/* Header Section */}
       <div className="pt-16 pb-12 text-center">
-        <h1 className="text-5xl md:text-7xl font-headline leading-none mb-6 text-[#7A4B6D] font-extrabold drop-shadow-lg" style={{ fontFamily: 'cursive, sans-serif' }}>
+        <h1 className="text-5xl md:text-7xl font-headline leading-none mb-6 text-green-700 font-extrabold drop-shadow-lg" style={{ fontFamily: 'cursive, sans-serif' }}>
           Choose your <span className="relative inline-block">
             Apps
             <span className="absolute -bottom-2 left-0 w-full h-1.5 bg-[#00ca99] rounded-full"></span>
@@ -64,7 +64,7 @@ const Tryhome = () => {
             />
           </div>
 
-          <h2 className="text-3xl  text-[#7A4B6D] font-extrabold mb-8 italic" style={{ fontFamily: 'cursive, sans-serif' }}>
+          <h2 className="text-3xl text-green-700 font-extrabold mb-8 italic" style={{ fontFamily: 'cursive, sans-serif' }}>
             Available Apps
           </h2>
           
@@ -120,7 +120,7 @@ const Tryhome = () => {
             </p>
           </div>
 
-        <a href="/tryapppage">  <button className="w-full bg-[#714B67] hover:bg-[#5a3c52] text-white font-bold py-5 rounded-xl transition-all active:scale-95 shadow-lg shadow-purple-900/20 text-xl">
+        <a href="/tryapppage">  <button className="w-full bg-white-700 hover:bg-green-700 text-black hover:bg-indigo-400 hover:text-white font-bold py-5 rounded-xl transition-all active:scale-95 shadow-lg shadow-purple-900/20 text-xl border-2">
             Continue
           </button></a>
         </div>

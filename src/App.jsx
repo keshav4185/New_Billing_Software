@@ -22,7 +22,7 @@ import Salesteampage from './Pages/orderpage/salesteampage';
 import Productpage from './Pages/Productpage/productpage';
 import ProductFormnew from './Pages/Productpage/productfrompage';
 import Toinvoicepage from './Pages/Invoicepage/Toinvoicepage';
-
+import Myaccountpage from './Pages/Mypage/myaccountpage';
 
 
 // Layout component with navbar and footer
@@ -50,7 +50,10 @@ function App() {
         <Route path="/documentation" element={<LayoutWithNavbar><DocumentationPage /></LayoutWithNavbar>} />
         <Route path="/welcome" element={<LayoutWithNavbar><Welcomepage /></LayoutWithNavbar>} />
         <Route path="/tryapppage" element={<LayoutWithNavbar><Tryapppage /></LayoutWithNavbar>} />
-        
+        <Route path="/myaccountpage" element={<LayoutWithNavbar><Myaccountpage /></LayoutWithNavbar>} />
+
+
+
         {/* Dashboard routes without navbar and footer */}
         <Route path="/sdashboardpage" element={<Sdashboardpage />} />
         <Route path="/snewpage" element={<Snewpage />} />
@@ -58,7 +61,7 @@ function App() {
         <Route path="/scustomerpage" element={<Scustomerpage />} />
         <Route path="/salesteampage" element={<Salesteampage />} />
         <Route path="/productpage" element={<Productpage />} />
-        <Route path="/productform" element={<ProductFormnew />} />
+        <Route path="/productform" element={<ProductFormnew />}/>
         <Route path="/toinvoicepage" element={<Toinvoicepage />} />
       </Routes>
     </BrowserRouter>

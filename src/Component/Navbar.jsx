@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-
+import Logo from '../assets/Logo.png';
 // Reusing your Button component structure
 const Button = ({ children, primary = false, outline = false, className = '', ...props }) => {
     const baseClasses = 'px-4 py-2 font-semibold rounded-lg transition duration-200 cursor-pointer text-sm';
@@ -29,17 +29,28 @@ const navItems = [
 
 const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isSignedIn, setIsSignedIn] = useState(false);
+    const [userName, setUserName] = useState('Keshav');
+    
+    // Check if user is signed in (you can use localStorage or other state management)
+    React.useEffect(() => {
+        const signedIn = localStorage.getItem('isSignedIn');
+        if (signedIn === 'true') {
+            setIsSignedIn(true);
+        }
+    }, []);
+    
     const closeMenu = () => setIsMenuOpen(false);
 
     return (
         <header className="sticky top-0 z-50 bg-white shadow-md">
-            <div className="max-w-7xl mx-auto py-5 px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto py-2 px-6 lg:px-8">
                 <div className="flex justify-between items-center">
                     
                     {/* Logo and Desktop Navigation */}
                     <div className="flex items-center space-x-12  "> 
-                        <Link to="/" className="text-2xl font-bold  text-[#7A4B6D] ">
-                            SMART
+                        <Link to="/" className="flex items-center space-x-2">
+                           <img src={Logo} alt="Logo" className='h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20 lg:h-24 lg:w-24 object-contain -my-4'/>
                         </Link>
 
                         {/* Desktop Menu */}
@@ -59,8 +70,22 @@ const Navbar = () => {
                     {/* Desktop Buttons + Mobile Hamburger */}
                     <div className="flex items-center space-x-3">
                         <div className="hidden md:flex items-center space-x-3">
-                            <a href="/Account">  <Button outline className="w-full" >Sign in</Button></a> 
-                         <a href="trypage">   <Button outline className="try">Try it free</Button> </a>
+                            {isSignedIn ? (
+                                <>
+                                    <Link to="/myaccountpage" className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100">
+                                        <div className="w-8 h-8 bg-indigo-700 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                            {userName.charAt(0)}
+                                        </div>
+                                        <span className="font-medium text-gray-700">{userName}</span>
+                                    </Link>
+                                    <a href="trypage">   <Button outline className="try hover:bg-indigo-400  ">Try it free</Button> </a>
+                                </>
+                            ) : (
+                                <>
+                                    <a href="/Account">  <Button outline className="w-full hover:bg-indigo-400 " >Sign in</Button></a> 
+                                    <a href="trypage">   <Button outline className="try hover:bg-indigo-400  ">Try it free</Button> </a>
+                                </>
+                            )}
                         </div>
 
                         {/* Hamburger */}
@@ -98,8 +123,22 @@ const Navbar = () => {
                     ))}
 
                     <div className="pt-4 space-y-2 ">
-                     <a href="/Account">  <Button outline className="w-full" >Sign in</Button></a> 
-                      <a href="/trypage">  <Button outline className="w-full try">Try it free</Button></a>
+                        {isSignedIn ? (
+                            <>
+                                <Link to="/myaccountpage" className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100">
+                                    <div className="w-8 h-8 bg-indigo-700 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                        {userName.charAt(0)}
+                                    </div>
+                                    <span className="font-medium text-gray-700">{userName}</span>
+                                </Link>
+                                <a href="/trypage">  <Button outline className="w-full try">Try it free</Button></a>
+                            </>
+                        ) : (
+                            <>
+                                <a href="/Account">  <Button outline className="w-full" >Sign in</Button></a> 
+                                <a href="/trypage">  <Button outline className="w-full try">Try it free</Button></a>
+                            </>
+                        )}
                     </div>
                 </div>
             </nav>

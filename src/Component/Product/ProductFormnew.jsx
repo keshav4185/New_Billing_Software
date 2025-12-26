@@ -10,6 +10,8 @@ const ProductFormnew = () => {
     name: '',
     price: '',
     cost: '',
+    tax: '',
+    stock: '',
     type: 'Goods',
     image: null
   });
@@ -93,6 +95,29 @@ const ProductFormnew = () => {
                         placeholder="0.00"
                       />
                     </div>
+                  </div>
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <span className="font-bold text-slate-700">Tax %</span>
+                    <div className="flex items-center gap-1">
+                      <input 
+                        type="number" 
+                        value={formData.tax}
+                        onChange={(e) => setFormData({...formData, tax: e.target.value})}
+                        className="w-24 text-right outline-none"
+                        placeholder="0"
+                      />
+                      <span className="text-slate-400">%</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center border-b pb-2">
+                    <span className="font-bold text-slate-700">Stock Quantity</span>
+                    <input 
+                      type="number" 
+                      value={formData.stock}
+                      onChange={(e) => setFormData({...formData, stock: e.target.value})}
+                      className="w-24 text-right outline-none"
+                      placeholder="0"
+                    />
                   </div>
                 </div>
               </div>

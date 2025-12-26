@@ -53,7 +53,7 @@ const Homesection9 = () => {
             <div className="max-w-7xl mx-auto px-6 lg:px-8 text-left">
                 
                 {/* Headline: "One need, one app. Expand as you grow." */}
-                <h2 className="text-5xl md:text-6xl font-headline text-[#7A4B6D] leading-tight mb-4 elc font-extrabold">
+                <h2 className="text-4xl md:text-4xl font-headline text-green-700  leading-tight mb-4 elc font-extrabold">
                     One <span className="highlight-bg pb-1 inline-block">need</span>, one <span className="highlight-bg pb-1 inline-block">app</span>.
                 </h2>
                 <p className="text-xl md:text-2xl text-gray-700 max-w-2xl mb-12">

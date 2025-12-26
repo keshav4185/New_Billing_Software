@@ -119,26 +119,26 @@ const Homesection1 = () => {
             >
             
             {/* Headline */}
-            <h1 className="text-5xl md:text-7xl font-headline leading-none mb-6 text-[#7A4B6D] font-extrabold drop-shadow-lg">
-                Electronic Invoicing
+            <h1 className="text-4xl md:text-7xl font-headline leading-none mb-6 text-green-700 font-extrabold drop-shadow-lg">
+             Smart Invoice
             </h1>
             
             {/* Sub-headline with custom highlight */}
-            <div className="text-4xl md:text-7xl font-headline leading-none mb-12">
-                <span className="highlight-bg pb-2 simple text-[#7A4B6D] font-extrabold drop-shadow-md">Simple. Free.</span>
+            <div className="text-2xl md:text-5xl font-headline leading-none mb-12">
+                <span className="highlight-bg pb-2 simple text-gray-600 font-bold drop-shadow-md">Simple. Free.</span>
             </div>
             
             {/* Description */}
-            <p className="text-xl text-gray-600 max-w-2xl mb-12">
+            <p className="text-xl text-black max-w-2xl mb-12">
                 Smart Invoicing makes it easy to create professional invoices and customize them to your liking.
             </p>
 
             {/* Action Buttons */}
             <div className="flex space-x-4 mb-4">
-               <a href="trypage"> <Button className="start shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200" outline>
+               <a href="trypage"> <Button className="start shadow-lg hover:shadow-xl transform hover:scale-105  transition-all duration-200 hover:bg-indigo-400 hover:text-white" outline>
                     Start now - It's free
                 </Button></a>
-                <Button outline className="text-base py-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                <Button outline className="text-base py-3 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 hover:bg-indigo-400  hover:text-white">
                     Meet an advisor ▾
                 </Button>
             </div>
