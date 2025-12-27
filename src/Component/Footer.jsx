@@ -1,7 +1,7 @@
 // src/Component/Footer.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import Logo from '../assets/Logo.jpg';
+import Logo from '../assets/logo.jpg';
 // Simplified Icon Placeholder Component
 const SocialIcon = ({ children }) => (
     <a href="#" className="text-gray-400">

@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Logo from '../assets/Logo.jpg';
+import Logo from '../assets/logo.jpg';
 // Reusing your Button component structure
 const Button = ({ children, primary = false, outline = false, className = '', ...props }) => {
     const baseClasses = 'px-4 py-2 font-semibold rounded-lg transition duration-200 cursor-pointer text-sm';
