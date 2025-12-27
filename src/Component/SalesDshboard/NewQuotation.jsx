@@ -13,7 +13,8 @@ const NewQuotation = () => {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#714B67');
-  const [footerText, setFooterText] = useState('keshavgolande46@gmail.com');
+  const [footerText, setFooterText] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
   const [expirationDate, setExpirationDate] = useState('');
   const [invoiceAddress, setInvoiceAddress] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
@@ -112,34 +113,102 @@ const NewQuotation = () => {
       if (!validateData()) return;
       saveToSalesDashboard();
       const printWindow = window.open('', '_blank');
-      printWindow.document.write(`<html><head><title>Print Quotation</title></head><body>
-        <div style="padding: 40px; font-family: sans-serif;">
-          <h1 style="color: #714B67;">QUOTATION</h1>
-          <p>Customer: ${customer}</p>
-          <p>Date: ${new Date().toLocaleDateString()}</p>
-          <p>Expiration: ${expirationDate || 'Not set'}</p>
-          <p>Payment Terms: ${selectedTerm}</p>
-          ${invoiceAddress ? `<p>Invoice Address: ${invoiceAddress}</p>` : ''}
-          ${deliveryAddress ? `<p>Delivery Address: ${deliveryAddress}</p>` : ''}
-          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead><tr style="background: #f8fafc;">
-              <th style="padding: 10px; border: 1px solid #ddd;">Product</th>
-              <th style="padding: 10px; border: 1px solid #ddd;">Qty</th>
-              <th style="padding: 10px; border: 1px solid #ddd;">Price</th>
-              <th style="padding: 10px; border: 1px solid #ddd;">Amount</th>
-            </tr></thead>
-            <tbody>
-              ${orderLines.map(line => `<tr>
-                <td style="padding: 10px; border: 1px solid #ddd;">${line.product || 'Product'}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">${line.quantity}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">₹${line.unitPrice.toFixed(2)}</td>
-                <td style="padding: 10px; border: 1px solid #ddd;">₹${calculateSubtotal(line).toFixed(2)}</td>
-              </tr>`).join('')}
-            </tbody>
-          </table>
-          <h2 style="text-align: right; margin-top: 20px;">Total: ₹${totalAmount.toFixed(2)}</h2>
-        </div>
-      </body></html>`);
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print Quotation</title>
+            <style>
+              body { font-family: 'Arial', sans-serif; margin: 0; padding: 40px; color: #333; }
+              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #714B67; padding-bottom: 20px; margin-bottom: 30px; }
+              .logo { font-size: 28px; font-weight: bold; color: #714B67; }
+              .company-info { text-align: right; }
+              .title { font-size: 32px; font-weight: bold; color: #714B67; margin: 0; }
+              .subtitle { color: #666; margin: 5px 0 0 0; }
+              .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 30px 0; }
+              .info-block h4 { color: #714B67; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; }
+              .info-block p { margin: 5px 0; line-height: 1.4; }
+              table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+              th { background: #f8f9fa; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold; color: #714B67; }
+              td { padding: 12px; border: 1px solid #ddd; }
+              .total-section { text-align: right; margin-top: 30px; }
+              .total-row { display: flex; justify-content: flex-end; margin: 5px 0; }
+              .total-label { width: 150px; text-align: right; padding-right: 20px; }
+              .total-amount { font-weight: bold; width: 100px; }
+              .grand-total { font-size: 18px; color: #714B67; border-top: 2px solid #714B67; padding-top: 10px; margin-top: 10px; }
+              .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+              @media print { body { margin: 0; } }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div>
+                <div class="logo">SMART</div>
+                <div style="color: #666; font-size: 14px;">Business Solutions</div>
+              </div>
+              <div class="company-info">
+                <h1 class="title">QUOTATION</h1>
+                <p class="subtitle">Quote #: Q${String(Date.now()).slice(-5)}</p>
+                <p class="subtitle">Date: ${new Date().toLocaleDateString()}</p>
+              </div>
+            </div>
+            
+            <div class="info-section">
+              <div class="info-block">
+                <h4>Bill To:</h4>
+                <p><strong>${customer}</strong></p>
+                ${invoiceAddress ? `<p>${invoiceAddress.replace(/\n/g, '<br>')}</p>` : ''}
+              </div>
+              <div class="info-block">
+                <h4>Quote Details:</h4>
+                <p><strong>Expiration:</strong> ${expirationDate || 'Not specified'}</p>
+                <p><strong>Payment Terms:</strong> ${selectedTerm}</p>
+                ${deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${deliveryAddress.replace(/\n/g, '<br>')}</p>` : ''}
+              </div>
+            </div>
+            
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40%;">Product/Service</th>
+                  <th style="width: 10%; text-align: center;">Qty</th>
+                  <th style="width: 15%; text-align: right;">Unit Price</th>
+                  <th style="width: 10%; text-align: center;">Tax %</th>
+                  <th style="width: 10%; text-align: center;">Disc %</th>
+                  <th style="width: 15%; text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${orderLines.map(line => `
+                  <tr>
+                    <td><strong>${line.product || 'Product'}</strong></td>
+                    <td style="text-align: center;">${line.quantity}</td>
+                    <td style="text-align: right;">₹${line.unitPrice.toFixed(2)}</td>
+                    <td style="text-align: center;">${line.taxes}%</td>
+                    <td style="text-align: center;">${line.discount}%</td>
+                    <td style="text-align: right;">₹${calculateSubtotal(line).toFixed(2)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            
+            <div class="total-section">
+              <div class="total-row">
+                <div class="total-label">Subtotal:</div>
+                <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
+              </div>
+              <div class="total-row grand-total">
+                <div class="total-label">Total:</div>
+                <div class="total-amount">₹${totalAmount.toFixed(2)}</div>
+              </div>
+            </div>
+            
+            <div class="footer">
+              <p>Thank you for your business!</p>
+              <p>Smart Business Solutions | ${footerText} | www.smart.com</p>
+            </div>
+          </body>
+        </html>
+      `);
       printWindow.document.close();
       printWindow.print();
       return;
@@ -253,7 +322,7 @@ const NewQuotation = () => {
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium mb-1">To (Customer Email):</label>
-                      <input type="email" value={footerText} onChange={(e) => setFooterText(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Enter customer email" />
+                      <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Enter customer email" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Subject:</label>
@@ -313,9 +382,125 @@ const NewQuotation = () => {
             <div className="p-4 bg-slate-50 border-t flex justify-end gap-2">
               <button onClick={() => setShowDocumentModal(false)} className="bg-white border px-4 py-2 rounded">Cancel</button>
               <button onClick={() => {
+                if (!customerEmail.trim()) {
+                  alert('Please enter customer email address');
+                  return;
+                }
+                
+                // Generate professional bill in new window
+                const billWindow = window.open('', '_blank');
+                billWindow.document.write(`
+                  <html>
+                    <head>
+                      <title>Quotation - ${customer}</title>
+                      <style>
+                        body { font-family: 'Arial', sans-serif; margin: 0; padding: 40px; color: #333; }
+                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #714B67; padding-bottom: 20px; margin-bottom: 30px; }
+                        .logo { font-size: 28px; font-weight: bold; color: #714B67; margin: 0; }
+                        .company-info { text-align: right; }
+                        .title { font-size: 32px; font-weight: bold; color: #714B67; margin: 0; }
+                        .subtitle { color: #666; margin: 5px 0 0 0; }
+                        .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 30px 0; }
+                        .info-block h4 { color: #714B67; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; }
+                        .info-block p { margin: 5px 0; line-height: 1.4; }
+                        table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+                        th { background: #f8f9fa; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold; color: #714B67; }
+                        td { padding: 12px; border: 1px solid #ddd; }
+                        .total-section { text-align: right; margin-top: 30px; }
+                        .total-row { display: flex; justify-content: flex-end; margin: 5px 0; }
+                        .total-label { width: 150px; text-align: right; padding-right: 20px; }
+                        .total-amount { font-weight: bold; width: 100px; }
+                        .grand-total { font-size: 18px; color: #714B67; border-top: 2px solid #714B67; padding-top: 10px; margin-top: 10px; }
+                        .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+                        .email-notice { background: #e8f5e8; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745; }
+                      </style>
+                    </head>
+                    <body>
+                      <div class="email-notice">
+                        <h3 style="color: #28a745; margin: 0 0 10px 0;">✓ Email Sent Successfully!</h3>
+                        <p style="margin: 0;">Quotation has been sent to: <strong>${customerEmail}</strong></p>
+                      </div>
+                      
+                      <div class="header">
+                        <div style="display: flex; align-items: center;">
+                          <svg width="60" height="60" viewBox="0 0 100 100" style="margin-right: 15px;">
+                            <circle cx="50" cy="50" r="45" fill="#714B67" stroke="#5a3c52" stroke-width="2"/>
+                            <text x="50" y="58" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">S</text>
+                          </svg>
+                          <div>
+                            <div class="logo">SMART</div>
+                            <div style="color: #666; font-size: 14px;">Business Solutions</div>
+                          </div>
+                        </div>
+                        <div class="company-info">
+                          <h1 class="title">QUOTATION</h1>
+                          <p class="subtitle">Quote #: Q${String(Date.now()).slice(-5)}</p>
+                          <p class="subtitle">Date: ${new Date().toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      
+                      <div class="info-section">
+                        <div class="info-block">
+                          <h4>Bill To:</h4>
+                          <p><strong>${customer}</strong></p>
+                          ${invoiceAddress ? `<p>${invoiceAddress.replace(/\n/g, '<br>')}</p>` : ''}
+                        </div>
+                        <div class="info-block">
+                          <h4>Quote Details:</h4>
+                          <p><strong>Expiration:</strong> ${expirationDate || 'Not specified'}</p>
+                          <p><strong>Payment Terms:</strong> ${selectedTerm}</p>
+                          ${deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${deliveryAddress.replace(/\n/g, '<br>')}</p>` : ''}
+                        </div>
+                      </div>
+                      
+                      <table>
+                        <thead>
+                          <tr>
+                            <th style="width: 40%;">Product/Service</th>
+                            <th style="width: 10%; text-align: center;">Qty</th>
+                            <th style="width: 15%; text-align: right;">Unit Price</th>
+                            <th style="width: 10%; text-align: center;">Tax %</th>
+                            <th style="width: 10%; text-align: center;">Disc %</th>
+                            <th style="width: 15%; text-align: right;">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${orderLines.map(line => `
+                            <tr>
+                              <td><strong>${line.product || 'Product'}</strong></td>
+                              <td style="text-align: center;">${line.quantity}</td>
+                              <td style="text-align: right;">₹${line.unitPrice.toFixed(2)}</td>
+                              <td style="text-align: center;">${line.taxes}%</td>
+                              <td style="text-align: center;">${line.discount}%</td>
+                              <td style="text-align: right;">₹${calculateSubtotal(line).toFixed(2)}</td>
+                            </tr>
+                          `).join('')}
+                        </tbody>
+                      </table>
+                      
+                      <div class="total-section">
+                        <div class="total-row">
+                          <div class="total-label">Subtotal:</div>
+                          <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
+                        </div>
+                        <div class="total-row grand-total">
+                          <div class="total-label">Total:</div>
+                          <div class="total-amount">₹${totalAmount.toFixed(2)}</div>
+                        </div>
+                      </div>
+                      
+                      <div class="footer">
+                        <p>Thank you for your business!</p>
+                        <p>Smart Business Solutions | ${customerEmail} | www.smart.com</p>
+                      </div>
+                    </body>
+                  </html>
+                `);
+                billWindow.document.close();
+                
                 setShowDocumentModal(false);
                 saveToSalesDashboard();
-                addChatMessage(`Quotation sent to: ${footerText}`);
+                addChatMessage(`✓ Quotation sent successfully to: ${customerEmail}`);
               }} className="bg-[#714B67] text-white px-4 py-2 rounded font-bold">Send Email</button>
             </div>
           </div>

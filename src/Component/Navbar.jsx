@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../assets/logo.jpg';
 // Reusing your Button component structure
 const Button = ({ children, primary = false, outline = false, className = '', ...props }) => {
@@ -31,6 +31,8 @@ const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [isSignedIn, setIsSignedIn] = useState(false);
     const [userName, setUserName] = useState('Keshav');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const navigate = useNavigate();
     
     // Check if user is signed in (you can use localStorage or other state management)
     React.useEffect(() => {
@@ -41,6 +43,14 @@ const Navbar = () => {
     }, []);
     
     const closeMenu = () => setIsMenuOpen(false);
+
+    const handleSignOut = () => {
+        localStorage.removeItem('isSignedIn');
+        localStorage.removeItem('userEmail');
+        setIsSignedIn(false);
+        setShowDropdown(false);
+        navigate('/signin');
+    };
 
     return (
         <header className="sticky top-0 z-50 bg-white shadow-md">
@@ -72,12 +82,33 @@ const Navbar = () => {
                         <div className="hidden md:flex items-center space-x-3">
                             {isSignedIn ? (
                                 <>
-                                    <Link to="/myaccountpage" className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100">
-                                        <div className="w-8 h-8 bg-indigo-700 rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                            {userName.charAt(0)}
+                                    <div className="relative">
+                                        <div 
+                                            className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 cursor-pointer"
+                                            onClick={() => setShowDropdown(!showDropdown)}
+                                        >
+                                            <div className="w-8 h-8 bg-indigo-700 rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                                {userName.charAt(0)}
+                                            </div>
+                                            <span className="font-medium text-gray-700">{userName}</span>
+                                            <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
                                         </div>
-                                        <span className="font-medium text-gray-700">{userName}</span>
-                                    </Link>
+                                        {showDropdown && (
+                                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                                                <Link to="/myaccountpage" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
+                                                    My Account
+                                                </Link>
+                                                <button 
+                                                    onClick={handleSignOut}
+                                                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+                                                >
+                                                    Sign Out
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
                                     <a href="trypage">   <Button outline className="try hover:bg-indigo-400  ">Try it free</Button> </a>
                                 </>
                             ) : (

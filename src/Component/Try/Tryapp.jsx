@@ -1,5 +1,5 @@
 // src/Pages/Home/Try/Tryhome.jsx
-import React from 'react';
+import React, { useState } from 'react';
 // Import useNavigate for programmatic routing
 import { useNavigate } from 'react-router-dom'; 
 
@@ -8,15 +8,21 @@ import { useNavigate } from 'react-router-dom';
 
 function Tryapp() {
   const navigate = useNavigate();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
 
   // Function to handle the custom "Start Now" click logic
   const handleStartNowClick = (e) => {
     e.preventDefault(); 
     
-    // 🛑 CRITICAL FIX: Removed window.open()
+    // Store user name in localStorage
+    const fullName = `${firstName} ${lastName}`.trim();
+    if (fullName) {
+      localStorage.setItem('userName', fullName);
+      localStorage.setItem('userFirstName', firstName);
+    }
     
-    // 1. Navigate the CURRENT tab to the Animated Welcome Page
-    // Assuming your animated welcome component is mapped to /welcome
+    // Navigate to welcome page first
     navigate('/welcome'); 
   };
 
@@ -46,13 +52,27 @@ function Tryapp() {
         <form className="space-y-6"> 
           
           {/* Row 1: First and Last Name */}
-          <div>
-            <input
-              type="text"
-              placeholder="First and Last Name"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
-              required
-            />
+          <div className="flex space-x-4">
+            <div className="w-1/2">
+              <input
+                type="text"
+                placeholder="First Name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
+                required
+              />
+            </div>
+            <div className="w-1/2">
+              <input
+                type="text"
+                placeholder="Last Name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-teal-500 focus:border-teal-500"
+                required
+              />
+            </div>
           </div>
 
           {/* Row 2: Company Name */}
@@ -121,7 +141,7 @@ function Tryapp() {
               .
             </p>
 
-          <a href="/Welcome"> <button
+          <a href="/welcome"> <button
               type="button" 
               onClick={handleStartNowClick} // Triggers the navigation to /welcome
               className="w-full max-w-xs mx-auto block px-6 py-3 font-semibold rounded-lg shadow-md transition duration-200 border-2 hover:bg-green-700 text-black hover:bg-indigo-400 hover:text-white">

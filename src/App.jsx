@@ -23,7 +23,7 @@ import Productpage from './Pages/Productpage/productpage';
 import ProductFormnew from './Pages/Productpage/productfrompage';
 import Toinvoicepage from './Pages/Invoicepage/Toinvoicepage';
 import Myaccountpage from './Pages/Mypage/myaccountpage';
-
+import Salespage from './Pages/Reportingpage/salespage';
 
 // Layout component with navbar and footer
 const LayoutWithNavbar = ({ children }) => (
@@ -51,7 +51,7 @@ function App() {
         <Route path="/welcome" element={<LayoutWithNavbar><Welcomepage /></LayoutWithNavbar>} />
         <Route path="/tryapppage" element={<LayoutWithNavbar><Tryapppage /></LayoutWithNavbar>} />
         <Route path="/myaccountpage" element={<LayoutWithNavbar><Myaccountpage /></LayoutWithNavbar>} />
-
+      <Route path="/salespage" element={<Salespage />} />
 
 
         {/* Dashboard routes without navbar and footer */}

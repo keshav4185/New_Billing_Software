@@ -14,8 +14,24 @@ const SalesDashboard = () => {
   const [invoiceDropdownOpen, setInvoiceDropdownOpen] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const [reportingDropdownOpen, setReportingDropdownOpen] = useState(false);
   
   const [quotations, setQuotations] = useState([]);
+
+  useEffect(() => {
+    const savedName = localStorage.getItem('userName') || 'User';
+    setUserName(savedName);
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userFirstName');
+    localStorage.removeItem('isSignedIn');
+    localStorage.removeItem('userEmail');
+    navigate('/signin');
+  };
 
   const deleteQuotation = (id) => {
     const updatedQuotations = quotations.filter(q => q.id !== id);
@@ -87,19 +103,74 @@ const SalesDashboard = () => {
             {['Products', 'Reporting', 'Configuration'].map((item) => (
               <div 
                 key={item} 
-                className="px-3 h-full flex items-center hover:bg-black/10 cursor-pointer"
+                className="px-3 h-full flex items-center hover:bg-black/10 cursor-pointer relative"
+                onMouseEnter={() => item === 'Reporting' && setReportingDropdownOpen(true)}
+                onMouseLeave={() => item === 'Reporting' && setReportingDropdownOpen(false)}
                 onClick={() => item === 'Products' && navigate('/productpage')}
               >
                 {item} <ChevronDownIcon className="w-3 h-3 ml-1 opacity-50" />
+                {item === 'Reporting' && reportingDropdownOpen && (
+                  <div className="absolute top-10 left-0 w-48 bg-white border border-slate-200 shadow-lg py-1 z-50 text-slate-700">
+                    <div 
+                      className="px-4 py-2 hover:bg-slate-100 cursor-pointer" 
+                      onClick={(e) => { e.stopPropagation(); navigate('/salespage'); }}
+                    >
+                      Sales
+                    </div>
+                    <div 
+                      className="px-4 py-2 hover:bg-slate-100 cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); navigate('/salespersons'); }}
+                    >
+                      Salespersons
+                    </div>
+                    <div 
+                      className="px-4 py-2 hover:bg-slate-100 cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); navigate('/product-report'); }}
+                    >
+                      Products
+                    </div>
+                    <div 
+                      className="px-4 py-2 hover:bg-slate-100 cursor-pointer"
+                      onClick={(e) => { e.stopPropagation(); navigate('/customer-report'); }}
+                    >
+                      Customers
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         </div>
 
-        <div className="lg:hidden flex items-center">
-           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2">
-             {mobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
-           </button>
+        <div className="flex items-center">
+          <div className="relative">
+            <div 
+              className="flex items-center space-x-2 cursor-pointer hover:bg-black/10 p-2 rounded"
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+            >
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <span className="text-[#714B67] font-bold text-xs">
+                  {userName.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <span className="text-sm hidden md:block">{userName}</span>
+              <ChevronDownIcon className="w-3 h-3 opacity-50" />
+            </div>
+            {showUserDropdown && (
+              <div className="absolute right-0 top-10 w-48 bg-white border border-slate-200 shadow-lg py-1 z-50 text-slate-700">
+                <button 
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2 hover:bg-slate-100"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+          
+          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 lg:hidden ml-2">
+            {mobileMenuOpen ? <XMarkIcon className="w-6 h-6" /> : <Bars3Icon className="w-6 h-6" />}
+          </button>
         </div>
       </nav>
 
@@ -118,7 +189,13 @@ const SalesDashboard = () => {
               <span onClick={() => navigate('/toinvoicepage')}>Orders to Invoice</span>
             </div>
             <div className="font-semibold pt-2" onClick={() => navigate('/productpage')}>Products</div>
-            <div className="font-semibold">Reporting</div>
+            <div className="font-semibold pt-2">Reporting</div>
+            <div className="pl-4 flex flex-col gap-2 border-l-2 ml-1">
+              <span onClick={() => navigate('/sales')}>Sales</span>
+              <span onClick={() => navigate('/salespersons')}>Salespersons</span>
+              <span onClick={() => navigate('/product-report')}>Products</span>
+              <span onClick={() => navigate('/customer-report')}>Customers</span>
+            </div>
             <div className="font-semibold">Configuration</div>
           </div>
         </div>
@@ -140,7 +217,6 @@ const SalesDashboard = () => {
           </div>
         </div>
 
-        {/* --- SEARCH FILTER SECTION --- */}
         <div className="flex flex-row items-center gap-2 md:gap-4 w-full sm:w-auto justify-between">
           <div className="relative flex items-center border-b border-slate-300 flex-1 sm:w-64 md:w-80 pb-0.5 group">
             <MagnifyingGlassIcon className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
@@ -151,7 +227,6 @@ const SalesDashboard = () => {
               placeholder="Search by name or ID..." 
               className="outline-none w-full italic text-slate-700 bg-transparent text-[14px]" 
             />
-            {/* Added Clear Button for UX */}
             {searchQuery && (
               <XMarkIcon 
                 className="w-4 h-4 text-slate-300 cursor-pointer hover:text-slate-500" 
@@ -159,14 +234,6 @@ const SalesDashboard = () => {
               />
             )}
           </div>
-          
-          {/* <div className="flex items-center gap-2 md:gap-3 text-slate-500 border-l pl-2 md:pl-4 shrink-0">
-            <span className="text-[11px] whitespace-nowrap">{filteredData.length} / {quotations.length}</span>
-            <div className="flex gap-1">
-              <ListBulletIcon className="w-7 h-7 p-1.5 rounded cursor-pointer bg-slate-200" />
-              <TableCellsIcon className="w-7 h-7 p-1.5 cursor-pointer hover:bg-slate-100 rounded text-slate-400" />
-            </div>
-          </div> */}
         </div>
       </div>
 
@@ -323,4 +390,4 @@ const SalesDashboard = () => {
   );
 };
 
-export default SalesDashboard;  
+export default SalesDashboard;
