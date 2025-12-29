@@ -1,37 +1,86 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { 
   XMarkIcon, ChevronDownIcon, TrashIcon, Bars3Icon, 
   ExclamationCircleIcon, ArrowLeftIcon 
 } from '@heroicons/react/24/outline';
+import logo from '../../assets/logo.jpg';
 
 const NewQuotation = () => {
-  const [isConfirmed, setIsConfirmed] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const editingOrder = location.state?.order;
+  const isEditing = !!editingOrder;
+  
+  const [isConfirmed, setIsConfirmed] = useState(editingOrder?.status === 'Sales Order' || false);
   const [showCancelModal, setShowCancelModal] = useState(false); 
   const [activeTab, setActiveTab] = useState('Order Lines');
-  const [customer, setCustomer] = useState('');
+  const [customer, setCustomer] = useState(editingOrder?.customer || '');
+  const [customerPhone, setCustomerPhone] = useState(editingOrder?.customerPhone || '');
+  const [customerGST, setCustomerGST] = useState(editingOrder?.customerGST || '');
   const [showError, setShowError] = useState(false);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [showDocumentModal, setShowDocumentModal] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#714B67');
   const [footerText, setFooterText] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const [expirationDate, setExpirationDate] = useState('');
+  const [expirationDate, setExpirationDate] = useState(editingOrder?.expirationDate || '');
   const [invoiceAddress, setInvoiceAddress] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [chatHistory, setChatHistory] = useState([]);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [selectedTerm, setSelectedTerm] = useState('Immediate Payment');
+  const [selectedTerm, setSelectedTerm] = useState(editingOrder?.paymentTerms || 'Immediate Payment');
   const paymentRef = useRef(null);
-  const [orderLines, setOrderLines] = useState([]);
+  const [orderLines, setOrderLines] = useState(editingOrder?.items || []);
+  const [editingOrderId, setEditingOrderId] = useState(editingOrder?.id || null);
+  const [paymentMethod, setPaymentMethod] = useState(editingOrder?.paymentMethod || 'Cash');
+  const [isPaymentMethodOpen, setIsPaymentMethodOpen] = useState(false);
+  const [paymentMethodRef, setPaymentMethodRef] = useState(useRef(null));
+  const [companyName, setCompanyName] = useState('');
+  const [companyAddress, setCompanyAddress] = useState('123 Business Street, City - 400001');
+  const [companyGST, setCompanyGST] = useState('27XXXXX1234X1ZX');
+  const [companyLogo, setCompanyLogo] = useState(logo);
+  const [termsConditions, setTermsConditions] = useState('1. Payment due within specified terms\n2. Goods once sold will not be taken back\n3. Subject to local jurisdiction');
+  const [bankDetails, setBankDetails] = useState('Bank: HDFC Bank\nA/C: 1234567890\nIFSC: HDFC0001234');
+  const [showSignature, setShowSignature] = useState(true);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [upiId, setUpiId] = useState('smartbusiness@paytm');
+  const [includeCGST, setIncludeCGST] = useState(true);
+  const [includeSGST, setIncludeSGST] = useState(true);
+  const [advancePayment, setAdvancePayment] = useState(editingOrder?.advancePayment || 0);
+  const [paymentStatus, setPaymentStatus] = useState(editingOrder?.paymentStatus || 'Pending');
+  const [showCustomerHistory, setShowCustomerHistory] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState(() => {
+    if (editingOrder) return editingOrder.id;
+    
+    // Get next serial number from localStorage
+    const lastSerial = parseInt(localStorage.getItem('lastInvoiceSerial') || '0');
+    const nextSerial = lastSerial + 1;
+    
+    return `#${nextSerial.toString().padStart(3, '0')}`;
+  });
 
   // --- NEW FUNCTIONALITY START: Product List Search ---
   const [availableProducts, setAvailableProducts] = useState([]);
   const [activeSearchId, setActiveSearchId] = useState(null);
 
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setCompanyLogo(event.target.result);
+        localStorage.setItem('companyLogo', event.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   useEffect(() => {
-    // Fetches the product list you saved in your products component
-    const saved = JSON.parse(localStorage.getItem('my_products') || '[]');
-    setAvailableProducts(saved);
+    const savedLogo = localStorage.getItem('companyLogo');
+    if (savedLogo) {
+      setCompanyLogo(savedLogo);
+    }
   }, []);
 
   const handleProductSelect = (lineId, productObj) => {
@@ -44,21 +93,60 @@ const NewQuotation = () => {
     ));
     setActiveSearchId(null); // Close dropdown after selection
   };
+
+  const getCustomerHistory = () => {
+    const allQuotations = JSON.parse(localStorage.getItem('quotations') || '[]');
+    return allQuotations.filter(q => q.customer.toLowerCase() === customer.toLowerCase());
+  };
+
+  const handleWhatsAppShare = () => {
+    const message = `*${isConfirmed ? 'SALES ORDER' : 'QUOTATION'}*\n\n` +
+      `Order #: ${invoiceNumber}\n` +
+      `Customer: ${customer}\n` +
+      `Total: ₹${(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}\n` +
+      `Payment Status: ${paymentStatus}\n\n` +
+      `Thank you for your business!\n` +
+      `- ${companyName || 'Smart Business Solutions'}`;
+    
+    const whatsappUrl = `https://wa.me/${customerPhone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+    addChatMessage(`📱 WhatsApp message sent to ${customer}`);
+  };
+
+  const getPaymentStatusColor = (status) => {
+    switch(status) {
+      case 'Paid': return 'bg-green-500';
+      case 'Pending': return 'bg-yellow-500';
+      case 'Overdue': return 'bg-red-500';
+      default: return 'bg-gray-500';
+    }
+  };
   // --- NEW FUNCTIONALITY END ---
 
   const paymentTerms = ['Immediate Payment', '15 Days', '30 Days', '45 Days'];
+  const paymentMethods = ['Cash', 'Online', 'Card', 'UPI', 'Bank Transfer'];
+
+  // Show QR Scanner when Online payment is selected
+  useEffect(() => {
+    if (paymentMethod === 'Online' && isConfirmed) {
+      setShowQRScanner(true);
+    }
+  }, [paymentMethod, isConfirmed]);
 
   useEffect(() => {
     const handleClick = (e) => {
       if (paymentRef.current && !paymentRef.current.contains(e.target)) {
         setIsPaymentOpen(false);
       }
+      if (paymentMethodRef.current && !paymentMethodRef.current.contains(e.target)) {
+        setIsPaymentMethodOpen(false);
+      }
     };
-    if (isPaymentOpen) {
+    if (isPaymentOpen || isPaymentMethodOpen) {
       document.addEventListener('mousedown', handleClick);
     }
     return () => document.removeEventListener('mousedown', handleClick);
-  }, [isPaymentOpen]);
+  }, [isPaymentOpen, isPaymentMethodOpen]);
 
   const validateCustomer = () => {
     if (!customer?.trim()) {
@@ -79,19 +167,41 @@ const NewQuotation = () => {
   };
 
   const saveToSalesDashboard = () => {
+    // Update serial number in localStorage when saving
+    if (!isEditing) {
+      const currentSerial = parseInt(invoiceNumber.slice(1));
+      localStorage.setItem('lastInvoiceSerial', currentSerial.toString());
+    }
     const quotationData = {
-      id: `S${String(Date.now()).slice(-5)}`,
-      date: new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }),
+      id: editingOrderId || invoiceNumber,
+      date: editingOrder?.date || new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }),
       customer,
-      salesperson: 'Keshav',
+      customerPhone,
+      customerGST,
+      termsConditions,
+      bankDetails,
+      salesperson: editingOrder?.salesperson || 'Keshav',
       total: totalAmount,
       status: isConfirmed ? 'Sales Order' : 'Quotation',
       items: orderLines,
       paymentTerms: selectedTerm,
-      expirationDate
+      paymentMethod,
+      expirationDate,
+      advancePayment
     };
+    
     const existingData = JSON.parse(localStorage.getItem('quotations') || '[]');
-    localStorage.setItem('quotations', JSON.stringify([quotationData, ...existingData]));
+    
+    if (isEditing) {
+      // Update existing record
+      const updatedData = existingData.map(item => 
+        item.id === editingOrderId ? quotationData : item
+      );
+      localStorage.setItem('quotations', JSON.stringify(updatedData));
+    } else {
+      // Add new record
+      localStorage.setItem('quotations', JSON.stringify([quotationData, ...existingData]));
+    }
   };
 
   const addChatMessage = (text) => {
@@ -120,8 +230,12 @@ const NewQuotation = () => {
             <style>
               body { font-family: 'Arial', sans-serif; margin: 0; padding: 40px; color: #333; }
               .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #714B67; padding-bottom: 20px; margin-bottom: 30px; }
-              .logo { font-size: 28px; font-weight: bold; color: #714B67; }
+              .logo-section { display: flex; align-items: center; gap: 15px; }
+              .logo-img { height: 60px; width: auto; }
+              .logo-text { font-size: 28px; font-weight: bold; color: #714B67; }
               .company-info { text-align: right; }
+              @media print { .logo-img { height: 50px; } }
+              @media screen and (max-width: 768px) { .logo-img { height: 40px; } .logo-text { font-size: 20px; } }
               .title { font-size: 32px; font-weight: bold; color: #714B67; margin: 0; }
               .subtitle { color: #666; margin: 5px 0 0 0; }
               .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 30px 0; }
@@ -136,18 +250,23 @@ const NewQuotation = () => {
               .total-amount { font-weight: bold; width: 100px; }
               .grand-total { font-size: 18px; color: #714B67; border-top: 2px solid #714B67; padding-top: 10px; margin-top: 10px; }
               .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+              .terms-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+              .terms-block h4 { color: #714B67; font-size: 14px; margin: 0 0 10px 0; }
+              .terms-block p { font-size: 12px; line-height: 1.4; margin: 0; white-space: pre-line; }
+              .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+              .signature-box { text-align: center; width: 200px; }
+              .signature-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 5px; }
               @media print { body { margin: 0; } }
             </style>
           </head>
           <body>
             <div class="header">
-              <div>
-                <div class="logo">SMART</div>
-                <div style="color: #666; font-size: 14px;">Business Solutions</div>
+              <div class="logo-section">
+                <img src="${companyLogo}" alt="Company Logo" class="logo-img" />
               </div>
               <div class="company-info">
                 <h1 class="title">QUOTATION</h1>
-                <p class="subtitle">Quote #: Q${String(Date.now()).slice(-5)}</p>
+                <p class="subtitle">Quote #: ${invoiceNumber}</p>
                 <p class="subtitle">Date: ${new Date().toLocaleDateString()}</p>
               </div>
             </div>
@@ -162,6 +281,7 @@ const NewQuotation = () => {
                 <h4>Quote Details:</h4>
                 <p><strong>Expiration:</strong> ${expirationDate || 'Not specified'}</p>
                 <p><strong>Payment Terms:</strong> ${selectedTerm}</p>
+                <p><strong>Payment Method:</strong> ${paymentMethod}</p>
                 ${deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${deliveryAddress.replace(/\n/g, '<br>')}</p>` : ''}
               </div>
             </div>
@@ -196,9 +316,54 @@ const NewQuotation = () => {
                 <div class="total-label">Subtotal:</div>
                 <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
               </div>
+              ${includeCGST ? `
+                <div class="total-row">
+                  <div class="total-label">CGST (9%):</div>
+                  <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
+                </div>
+              ` : ''}
+              ${includeSGST ? `
+                <div class="total-row">
+                  <div class="total-label">SGST (9%):</div>
+                  <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
+                </div>
+              ` : ''}
               <div class="total-row grand-total">
                 <div class="total-label">Total:</div>
-                <div class="total-amount">₹${totalAmount.toFixed(2)}</div>
+                <div class="total-amount">₹${(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</div>
+              </div>
+              ${advancePayment > 0 ? `
+                <div class="total-row" style="color: #28a745; font-weight: bold; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+                  <div class="total-label">Advance Paid:</div>
+                  <div class="total-amount">₹${advancePayment.toFixed(2)}</div>
+                </div>
+                <div class="total-row" style="color: #dc3545; font-weight: bold;">
+                  <div class="total-label">Remaining Amount:</div>
+                  <div class="total-amount">₹${Math.max(0, (totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment).toFixed(2)}</div>
+                </div>
+              ` : ''}
+            </div>
+            
+            <div class="terms-section">
+              <div class="terms-block">
+                <h4>Terms & Conditions</h4>
+                <p>${termsConditions}</p>
+              </div>
+              <div class="terms-block">
+                <h4>Bank Details</h4>
+                <p>${bankDetails}</p>
+              </div>
+            </div>
+            
+            <div class="signature-section">
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>Customer Signature</p>
+              </div>
+              <div class="signature-box">
+                <div class="signature-line"></div>
+                <p>Authorized Signature</p>
+                <p style="font-size: 10px; margin-top: 5px;">Smart Business Solutions</p>
               </div>
             </div>
             
@@ -219,7 +384,10 @@ const NewQuotation = () => {
     if (btnName === 'Save') {
       if (!validateData()) return;
       saveToSalesDashboard();
-      addChatMessage(`Quotation saved for ${customer}`);
+      addChatMessage(isEditing ? `${isConfirmed ? 'Sales Order' : 'Quotation'} updated for ${customer}` : `Quotation saved for ${customer}`);
+      if (isEditing) {
+        setTimeout(() => navigate('/sdashboardpage'), 1000);
+      }
     }
     
     if (btnName === 'Confirm') {
@@ -228,7 +396,9 @@ const NewQuotation = () => {
     }
 
     if (btnName === 'Send') {
+      if (!validateData()) return;
       setShowDocumentModal(true);
+      return;
     }
   };
 
@@ -265,119 +435,310 @@ const NewQuotation = () => {
       
       {/* Preview Modal */}
       {showPreviewModal && (
-        <div className="fixed inset-0 bg-slate-900/40 z-[200] flex items-center justify-center p-4" onClick={() => setShowPreviewModal(false)}>
-          <div className="bg-white rounded shadow-xl max-w-4xl w-full h-[80vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="bg-teal-100 p-4 flex justify-between items-center">
-              <span className="text-teal-800">Preview Mode</span>
-              <XMarkIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowPreviewModal(false)} />
+        <div className="fixed inset-0 bg-slate-900/40 z-[200] flex items-center justify-center p-2 sm:p-4" onClick={() => setShowPreviewModal(false)}>
+          <div className="bg-white rounded-lg shadow-2xl w-full max-w-xs sm:max-w-2xl md:max-w-4xl lg:max-w-5xl h-[95vh] sm:h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-gradient-to-r from-[#714B67] to-[#5a3c52] text-white p-2 sm:p-4 flex justify-between items-center">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-white/20 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-xs sm:text-sm">📄</span>
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-lg">Professional Invoice Preview</h3>
+                  <p className="text-white/80 text-xs sm:text-sm">#{invoiceNumber}</p>
+                </div>
+              </div>
+              <button onClick={() => setShowPreviewModal(false)} className="text-white/80 hover:text-white p-1 sm:p-2 rounded-full hover:bg-white/10">
+                <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
             </div>
-            <div className="p-6 overflow-y-auto">
-              <h1 className="text-2xl font-bold mb-4">Quotation Preview</h1>
-              <p><strong>Customer:</strong> {customer || 'Not specified'}</p>
-              <p><strong>Date:</strong> {new Date().toLocaleDateString()}</p>
-              <p><strong>Expiration:</strong> {expirationDate || 'Not set'}</p>
-              <p><strong>Payment Terms:</strong> {selectedTerm}</p>
-              {invoiceAddress && <p><strong>Invoice Address:</strong> {invoiceAddress}</p>}
-              {deliveryAddress && <p><strong>Delivery Address:</strong> {deliveryAddress}</p>}
-              <table className="w-full mt-4 border-collapse border">
-                <thead><tr className="bg-gray-100">
-                  <th className="border p-2 text-left">Product</th>
-                  <th className="border p-2">Quantity</th>
-                  <th className="border p-2">Unit Price</th>
-                  <th className="border p-2">Tax %</th>
-                  <th className="border p-2">Disc %</th>
-                  <th className="border p-2">Amount</th>
-                </tr></thead>
-                <tbody>
-                  {orderLines.map(line => (
-                    <tr key={line.id}>
-                      <td className="border p-2">{line.product || 'Product'}</td>
-                      <td className="border p-2 text-center">{line.quantity}</td>
-                      <td className="border p-2 text-right">₹{line.unitPrice.toFixed(2)}</td>
-                      <td className="border p-2 text-center">{line.taxes}%</td>
-                      <td className="border p-2 text-center">{line.discount}%</td>
-                      <td className="border p-2 text-right">₹{calculateSubtotal(line).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="text-right mt-4 text-xl font-bold">Total: ₹{totalAmount.toFixed(2)}</div>
+            
+            <div className="p-2 sm:p-4 md:p-8 overflow-y-auto h-full bg-gray-50">
+              {/* Professional Invoice Layout */}
+              <div className="bg-white rounded-lg shadow-lg p-2 sm:p-4 md:p-8 max-w-4xl mx-auto">
+                {/* Header */}
+                <div className="flex flex-col sm:flex-row justify-between items-start mb-4 sm:mb-8 pb-3 sm:pb-6 border-b-2 border-[#714B67]">
+                  <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-0">
+                    <img src={companyLogo} alt="Company Logo" className="w-12 h-12 sm:w-16 sm:h-16 object-contain" />
+                  </div>
+                  <div className="text-left sm:text-right">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#714B67] mb-1 sm:mb-2">{isConfirmed ? 'SALES ORDER' : 'QUOTATION'}</h2>
+                    <p className="text-sm sm:text-base text-gray-600">#{invoiceNumber}</p>
+                    <p className="text-sm sm:text-base text-gray-600">Date: {new Date().toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                {/* Company & Customer Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8 mb-4 sm:mb-8">
+                  <div>
+                    <h4 className="font-bold text-[#714B67] text-xs sm:text-sm uppercase mb-2 sm:mb-3">Company Details</h4>
+                    <div className="bg-gray-50 p-2 sm:p-4 rounded">
+                      <p className="font-bold text-sm sm:text-base">{companyName}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{companyAddress}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">GST: {companyGST}</p>
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#714B67] text-xs sm:text-sm uppercase mb-2 sm:mb-3">Bill To</h4>
+                    <div className="bg-gray-50 p-2 sm:p-4 rounded">
+                      <p className="font-bold text-sm sm:text-base">{customer || 'Customer Name'}</p>
+                      {customerPhone && <p className="text-xs sm:text-sm text-gray-600">Phone: {customerPhone}</p>}
+                      {customerGST && <p className="text-xs sm:text-sm text-gray-600">GST: {customerGST}</p>}
+                      {invoiceAddress && <p className="text-xs sm:text-sm text-gray-600 mt-2">{invoiceAddress}</p>}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Order Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-8">
+                  <div className="bg-blue-50 p-2 sm:p-4 rounded text-center">
+                    <p className="text-xs sm:text-sm text-gray-600">Payment Terms</p>
+                    <p className="font-bold text-blue-600 text-sm sm:text-base">{selectedTerm}</p>
+                  </div>
+                  <div className="bg-green-50 p-2 sm:p-4 rounded text-center">
+                    <p className="text-xs sm:text-sm text-gray-600">Payment Method</p>
+                    <p className="font-bold text-green-600 text-sm sm:text-base">{paymentMethod}</p>
+                  </div>
+                  <div className="bg-purple-50 p-2 sm:p-4 rounded text-center">
+                    <p className="text-xs sm:text-sm text-gray-600">Expiration</p>
+                    <p className="font-bold text-purple-600 text-sm sm:text-base">{expirationDate || 'Not set'}</p>
+                  </div>
+                </div>
+
+                {/* Products Table */}
+                {orderLines.length > 0 && (
+                  <div className="mb-8">
+                    <h4 className="font-bold text-[#714B67] text-sm uppercase mb-4">Product Details</h4>
+                    <div className="overflow-hidden rounded-lg border">
+                      <table className="w-full">
+                        <thead className="bg-[#714B67] text-white">
+                          <tr>
+                            <th className="text-left p-3 font-semibold">Product/Service</th>
+                            <th className="text-center p-3 font-semibold">Qty</th>
+                            <th className="text-right p-3 font-semibold">Unit Price</th>
+                            <th className="text-center p-3 font-semibold">Tax%</th>
+                            <th className="text-center p-3 font-semibold">Disc%</th>
+                            <th className="text-right p-3 font-semibold">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {orderLines.map((line, index) => (
+                            <tr key={line.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
+                              <td className="p-3 font-medium">{line.product || 'Product'}</td>
+                              <td className="p-3 text-center">{line.quantity}</td>
+                              <td className="p-3 text-right">₹{line.unitPrice.toFixed(2)}</td>
+                              <td className="p-3 text-center">{line.taxes}%</td>
+                              <td className="p-3 text-center">{line.discount}%</td>
+                              <td className="p-3 text-right font-semibold">₹{calculateSubtotal(line).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* Totals */}
+                <div className="flex justify-end mb-8">
+                  <div className="w-80">
+                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600">Subtotal:</span>
+                        <span className="font-semibold">₹{untaxedAmount.toFixed(2)}</span>
+                      </div>
+                      {includeCGST && (
+                        <div className="flex justify-between py-2">
+                          <span className="text-gray-600">CGST (9%):</span>
+                          <span className="font-semibold">₹{(untaxedAmount * 0.09).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {includeSGST && (
+                        <div className="flex justify-between py-2">
+                          <span className="text-gray-600">SGST (9%):</span>
+                          <span className="font-semibold">₹{(untaxedAmount * 0.09).toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="border-t-2 border-[#714B67] pt-3 mt-3">
+                        <div className="flex justify-between">
+                          <span className="text-xl font-bold text-[#714B67]">Grand Total:</span>
+                          <span className="text-xl font-bold text-[#714B67]">₹{(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
+                        </div>
+                        {advancePayment > 0 && (
+                          <>
+                            <div className="flex justify-between mt-2 pt-2 border-t border-gray-300">
+                              <span className="text-lg font-bold text-green-600">Advance Paid:</span>
+                              <span className="text-lg font-bold text-green-600">₹{advancePayment.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between mt-1">
+                              <span className="text-lg font-bold text-orange-600">Remaining Amount:</span>
+                              <span className="text-lg font-bold text-orange-600">₹{Math.max(0, (totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment).toFixed(2)}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Terms & Bank Details */}
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                  <div>
+                    <h4 className="font-bold text-[#714B67] text-sm uppercase mb-3">Terms & Conditions</h4>
+                    <div className="bg-gray-50 p-4 rounded text-xs leading-relaxed whitespace-pre-line">
+                      {termsConditions}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#714B67] text-sm uppercase mb-3">Bank Details</h4>
+                    <div className="bg-gray-50 p-4 rounded text-xs leading-relaxed whitespace-pre-line">
+                      {bankDetails}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Signatures */}
+                <div className="flex justify-between items-end pt-8">
+                  <div className="text-center">
+                    <div className="w-48 h-16 border-b-2 border-gray-300 mb-2"></div>
+                    <p className="text-sm font-semibold text-gray-600">Customer Signature</p>
+                  </div>
+                  <div className="text-center">
+                    <div className="w-48 h-16 border-b-2 border-gray-300 mb-2"></div>
+                    <p className="text-sm font-semibold text-gray-600">Authorized Signature</p>
+                    <p className="text-xs text-gray-500 mt-1">{companyName}</p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="text-center mt-8 pt-6 border-t border-gray-200">
+                  <p className="text-gray-600 font-semibold">Thank you for your business!</p>
+                  <p className="text-sm text-gray-500 mt-2">{companyName} | www.smart.com</p>
+                  <p className="text-xs text-gray-400 mt-1">Generated on {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
+                </div>
+              </div>
+            </div>
+            
+            {/* Preview Footer Actions */}
+            <div className="bg-white border-t p-2 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${isConfirmed ? 'bg-green-500' : 'bg-blue-500'}`}></span>
+                Status: {isConfirmed ? 'Confirmed Sales Order' : 'Draft Quotation'}
+              </div>
+              <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+                <button 
+                  onClick={() => setShowPreviewModal(false)}
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 font-medium text-xs sm:text-sm"
+                >
+                  Close Preview
+                </button>
+                <button 
+                  onClick={() => {
+                    setShowPreviewModal(false);
+                    handleActionClick('Print');
+                  }}
+                  className="flex-1 sm:flex-none px-3 sm:px-4 py-2 bg-[#714B67] text-white rounded-lg hover:bg-[#5a3c52] font-medium text-xs sm:text-sm"
+                >
+                  Print Document
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* Document Modal */}
+      {/* Document Modal with Logo */}
       {showDocumentModal && (
         <div className="fixed inset-0 bg-slate-900/40 z-[200] flex items-center justify-center p-4">
-          <div className="bg-white rounded shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+          <div className="bg-white rounded shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center">
               <h3 className="font-bold text-lg">Send Quotation</h3>
               <XMarkIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowDocumentModal(false)} />
             </div>
             <div className="p-6 overflow-y-auto max-h-[70vh]">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                {/* Email Form */}
                 <div>
                   <h4 className="font-bold mb-4 text-slate-800">Email Details</h4>
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium mb-1">To (Customer Email):</label>
+                      <label className="block text-sm font-medium mb-1">To:</label>
                       <input type="email" value={customerEmail} onChange={(e) => setCustomerEmail(e.target.value)} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" placeholder="Enter customer email" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Subject:</label>
-                      <input type="text" value={`Quotation for ${customer}`} className="w-full border border-slate-300 rounded px-3 py-2 text-sm bg-slate-50" readOnly />
+                      <input type="text" value={`Quotation ${invoiceNumber} - ${customer}`} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Message:</label>
+                      <textarea className="w-full h-32 border border-slate-300 rounded px-3 py-2 text-sm" defaultValue={`Dear ${customer},\n\nPlease find your quotation ${invoiceNumber} attached.\n\nTotal Amount: ₹${(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}\n\nThank you for your business.\n\nBest regards`} />
                     </div>
                   </div>
                 </div>
+                
+                {/* Quotation Preview with Logo */}
                 <div>
-                  <h4 className="font-bold mb-4 text-slate-800">Quotation Summary</h4>
-                  <div className="bg-slate-50 p-4 rounded space-y-3">
-                    <div className="flex justify-between"><span className="font-medium">Customer:</span><span>{customer}</span></div>
-                    <div className="flex justify-between"><span className="font-medium">Date:</span><span>{new Date().toLocaleDateString()}</span></div>
-                    <div className="flex justify-between"><span className="font-medium">Expiration:</span><span>{expirationDate || 'Not set'}</span></div>
-                    <div className="flex justify-between"><span className="font-medium">Payment Terms:</span><span>{selectedTerm}</span></div>
-                    {invoiceAddress && <div><span className="font-medium">Invoice Address:</span><div className="text-sm text-slate-600 mt-1">{invoiceAddress}</div></div>}
-                    {deliveryAddress && <div><span className="font-medium">Delivery Address:</span><div className="text-sm text-slate-600 mt-1">{deliveryAddress}</div></div>}
-                    <div className="border-t pt-3 mt-4">
-                      <div className="flex justify-between"><span className="font-medium">Products:</span><span>{orderLines.length} items</span></div>
-                      <div className="flex justify-between"><span className="font-medium">Untaxed Amount:</span><span>₹{untaxedAmount.toFixed(2)}</span></div>
-                      <div className="flex justify-between font-bold text-lg border-t pt-2 mt-2"><span>Total:</span><span>₹{totalAmount.toFixed(2)}</span></div>
+                  <h4 className="font-bold mb-4 text-slate-800">Quotation Preview</h4>
+                  <div className="bg-white border rounded-lg p-4 max-h-96 overflow-y-auto">
+                    {/* Header with Logo */}
+                    <div className="flex justify-between items-center mb-4 pb-3 border-b">
+                      <div className="flex items-center gap-3">
+                        <img src={companyLogo} alt="Logo" className="h-12 w-auto" />
+                      </div>
+                      <div className="text-right">
+                        <h2 className="text-lg font-bold text-[#714B67]">QUOTATION</h2>
+                        <p className="text-sm text-gray-600">{invoiceNumber}</p>
+                        <p className="text-sm text-gray-600">{new Date().toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Customer Info */}
+                    <div className="mb-4">
+                      <h5 className="font-bold text-sm mb-2">Bill To:</h5>
+                      <p className="font-medium">{customer}</p>
+                      {customerPhone && <p className="text-sm text-gray-600">Phone: {customerPhone}</p>}
+                      {customerGST && <p className="text-sm text-gray-600">GST: {customerGST}</p>}
+                    </div>
+                    
+                    {/* Products */}
+                    {orderLines.length > 0 && (
+                      <div className="mb-4">
+                        <h5 className="font-bold text-sm mb-2">Products:</h5>
+                        <div className="space-y-1">
+                          {orderLines.map(line => (
+                            <div key={line.id} className="flex justify-between text-sm">
+                              <span>{line.product || 'Product'} (x{line.quantity})</span>
+                              <span>₹{calculateSubtotal(line).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Totals */}
+                    <div className="border-t pt-3">
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Subtotal:</span>
+                        <span>₹{untaxedAmount.toFixed(2)}</span>
+                      </div>
+                      {includeCGST && (
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>CGST (9%):</span>
+                          <span>₹{(untaxedAmount * 0.09).toFixed(2)}</span>
+                        </div>
+                      )}
+                      {includeSGST && (
+                        <div className="flex justify-between text-sm mb-1">
+                          <span>SGST (9%):</span>
+                          <span>₹{(untaxedAmount * 0.09).toFixed(2)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between font-bold text-lg border-t pt-2">
+                        <span>Total:</span>
+                        <span>₹{(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              {orderLines.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="font-bold mb-3 text-slate-800">Product Details</h4>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm border border-slate-200">
-                      <thead className="bg-slate-100">
-                        <tr>
-                          <th className="border-b p-2 text-left">Product</th>
-                          <th className="border-b p-2 text-center">Qty</th>
-                          <th className="border-b p-2 text-right">Unit Price</th>
-                          <th className="border-b p-2 text-center">Tax%</th>
-                          <th className="border-b p-2 text-center">Disc%</th>
-                          <th className="border-b p-2 text-right">Amount</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {orderLines.map(line => (
-                          <tr key={line.id} className="border-b">
-                            <td className="p-2">{line.product || 'Product'}</td>
-                            <td className="p-2 text-center">{line.quantity}</td>
-                            <td className="p-2 text-right">₹{line.unitPrice.toFixed(2)}</td>
-                            <td className="p-2 text-center">{line.taxes}%</td>
-                            <td className="p-2 text-center">{line.discount}%</td>
-                            <td className="p-2 text-right">₹{calculateSubtotal(line).toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
             </div>
             <div className="p-4 bg-slate-50 border-t flex justify-end gap-2">
               <button onClick={() => setShowDocumentModal(false)} className="bg-white border px-4 py-2 rounded">Cancel</button>
@@ -386,121 +747,10 @@ const NewQuotation = () => {
                   alert('Please enter customer email address');
                   return;
                 }
-                
-                // Generate professional bill in new window
-                const billWindow = window.open('', '_blank');
-                billWindow.document.write(`
-                  <html>
-                    <head>
-                      <title>Quotation - ${customer}</title>
-                      <style>
-                        body { font-family: 'Arial', sans-serif; margin: 0; padding: 40px; color: #333; }
-                        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #714B67; padding-bottom: 20px; margin-bottom: 30px; }
-                        .logo { font-size: 28px; font-weight: bold; color: #714B67; margin: 0; }
-                        .company-info { text-align: right; }
-                        .title { font-size: 32px; font-weight: bold; color: #714B67; margin: 0; }
-                        .subtitle { color: #666; margin: 5px 0 0 0; }
-                        .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 30px 0; }
-                        .info-block h4 { color: #714B67; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; }
-                        .info-block p { margin: 5px 0; line-height: 1.4; }
-                        table { width: 100%; border-collapse: collapse; margin: 30px 0; }
-                        th { background: #f8f9fa; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold; color: #714B67; }
-                        td { padding: 12px; border: 1px solid #ddd; }
-                        .total-section { text-align: right; margin-top: 30px; }
-                        .total-row { display: flex; justify-content: flex-end; margin: 5px 0; }
-                        .total-label { width: 150px; text-align: right; padding-right: 20px; }
-                        .total-amount { font-weight: bold; width: 100px; }
-                        .grand-total { font-size: 18px; color: #714B67; border-top: 2px solid #714B67; padding-top: 10px; margin-top: 10px; }
-                        .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
-                        .email-notice { background: #e8f5e8; padding: 20px; margin: 20px 0; border-left: 4px solid #28a745; }
-                      </style>
-                    </head>
-                    <body>
-                      <div class="email-notice">
-                        <h3 style="color: #28a745; margin: 0 0 10px 0;">✓ Email Sent Successfully!</h3>
-                        <p style="margin: 0;">Quotation has been sent to: <strong>${customerEmail}</strong></p>
-                      </div>
-                      
-                      <div class="header">
-                        <div style="display: flex; align-items: center;">
-                          <svg width="60" height="60" viewBox="0 0 100 100" style="margin-right: 15px;">
-                            <circle cx="50" cy="50" r="45" fill="#714B67" stroke="#5a3c52" stroke-width="2"/>
-                            <text x="50" y="58" font-family="Arial, sans-serif" font-size="28" font-weight="bold" fill="white" text-anchor="middle">S</text>
-                          </svg>
-                          <div>
-                            <div class="logo">SMART</div>
-                            <div style="color: #666; font-size: 14px;">Business Solutions</div>
-                          </div>
-                        </div>
-                        <div class="company-info">
-                          <h1 class="title">QUOTATION</h1>
-                          <p class="subtitle">Quote #: Q${String(Date.now()).slice(-5)}</p>
-                          <p class="subtitle">Date: ${new Date().toLocaleDateString()}</p>
-                        </div>
-                      </div>
-                      
-                      <div class="info-section">
-                        <div class="info-block">
-                          <h4>Bill To:</h4>
-                          <p><strong>${customer}</strong></p>
-                          ${invoiceAddress ? `<p>${invoiceAddress.replace(/\n/g, '<br>')}</p>` : ''}
-                        </div>
-                        <div class="info-block">
-                          <h4>Quote Details:</h4>
-                          <p><strong>Expiration:</strong> ${expirationDate || 'Not specified'}</p>
-                          <p><strong>Payment Terms:</strong> ${selectedTerm}</p>
-                          ${deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${deliveryAddress.replace(/\n/g, '<br>')}</p>` : ''}
-                        </div>
-                      </div>
-                      
-                      <table>
-                        <thead>
-                          <tr>
-                            <th style="width: 40%;">Product/Service</th>
-                            <th style="width: 10%; text-align: center;">Qty</th>
-                            <th style="width: 15%; text-align: right;">Unit Price</th>
-                            <th style="width: 10%; text-align: center;">Tax %</th>
-                            <th style="width: 10%; text-align: center;">Disc %</th>
-                            <th style="width: 15%; text-align: right;">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          ${orderLines.map(line => `
-                            <tr>
-                              <td><strong>${line.product || 'Product'}</strong></td>
-                              <td style="text-align: center;">${line.quantity}</td>
-                              <td style="text-align: right;">₹${line.unitPrice.toFixed(2)}</td>
-                              <td style="text-align: center;">${line.taxes}%</td>
-                              <td style="text-align: center;">${line.discount}%</td>
-                              <td style="text-align: right;">₹${calculateSubtotal(line).toFixed(2)}</td>
-                            </tr>
-                          `).join('')}
-                        </tbody>
-                      </table>
-                      
-                      <div class="total-section">
-                        <div class="total-row">
-                          <div class="total-label">Subtotal:</div>
-                          <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
-                        </div>
-                        <div class="total-row grand-total">
-                          <div class="total-label">Total:</div>
-                          <div class="total-amount">₹${totalAmount.toFixed(2)}</div>
-                        </div>
-                      </div>
-                      
-                      <div class="footer">
-                        <p>Thank you for your business!</p>
-                        <p>Smart Business Solutions | ${customerEmail} | www.smart.com</p>
-                      </div>
-                    </body>
-                  </html>
-                `);
-                billWindow.document.close();
-                
-                setShowDocumentModal(false);
                 saveToSalesDashboard();
-                addChatMessage(`✓ Quotation sent successfully to: ${customerEmail}`);
+                addChatMessage(`📧 Quotation ${invoiceNumber} sent successfully to ${customerEmail}`);
+                setShowDocumentModal(false);
+                alert(`Email sent successfully to ${customerEmail}!`);
               }} className="bg-[#714B67] text-white px-4 py-2 rounded font-bold">Send Email</button>
             </div>
           </div>
@@ -525,6 +775,59 @@ const NewQuotation = () => {
         </div>
       )}
 
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <div className="fixed inset-0 bg-black/60 z-[250] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">💳</span>
+                  <div>
+                    <h3 className="font-bold text-lg">Online Payment</h3>
+                    <p className="text-white/80 text-sm">Scan QR to Pay</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowQRScanner(false)} className="text-white/80 hover:text-white">
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 text-center">
+              <div className="bg-white border-4 border-gray-200 rounded-lg p-4 mb-4 inline-block">
+                <div className="w-48 h-48 bg-gray-100 rounded flex items-center justify-center">
+                  <div className="grid grid-cols-8 gap-1 w-40 h-40">
+                    {Array.from({length: 64}, (_, i) => (
+                      <div key={i} className={`w-full h-full ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <div className="flex justify-between mb-2">
+                  <span>Amount:</span>
+                  <span className="font-bold text-xl text-green-600">₹{(totalAmount + (untaxedAmount * 0.18)).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>UPI ID:</span>
+                  <span className="font-mono text-sm">{upiId}</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button onClick={() => setShowQRScanner(false)} className="flex-1 bg-gray-500 text-white py-2 rounded">Close</button>
+                <button onClick={() => {
+                  addChatMessage(`💳 Payment completed for ₹${(totalAmount + (untaxedAmount * 0.18)).toFixed(2)}`);
+                  setShowQRScanner(false);
+                }} className="flex-1 bg-green-500 text-white py-2 rounded">Payment Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 bg-red-600 text-white px-6 py-2 rounded">
           <ExclamationCircleIcon className="w-5 h-5" />
@@ -537,7 +840,7 @@ const NewQuotation = () => {
       {/* Action Bar */}
       <div className="flex items-center justify-between px-2 sm:px-4 py-2 border-b bg-white">
         <div className="flex items-center gap-2 sm:gap-4">
-          <button onClick={() => window.history.back()} className="flex items-center gap-1.5 px-2 py-1 text-slate-600 hover:bg-slate-100 rounded">
+          <button onClick={() => isEditing ? navigate('/sdashboardpage') : window.history.back()} className="flex items-center gap-1.5 px-2 py-1 text-slate-600 hover:bg-slate-100 rounded">
             <ArrowLeftIcon className="w-4 h-4" />
             <span className="font-bold hidden sm:inline">Back</span>
           </button>
@@ -559,17 +862,46 @@ const NewQuotation = () => {
 
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
         <main className="flex-1 overflow-y-auto bg-white border-r p-4 sm:p-6 lg:p-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900 mb-4 sm:mb-6">{isConfirmed ? 'S00071' : 'New Quotation'}</h1>
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900">
+              {isEditing ? 
+                (isConfirmed ? `Sales Order - ${editingOrderId}` : `Edit Quotation - ${editingOrderId}`) : 
+                (isConfirmed ? 'S00071' : 'New Quotation')
+              }
+            </h1>
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${isConfirmed ? 'bg-green-500' : 'bg-blue-500'}`}>
+                {isConfirmed ? 'CONFIRMED' : 'DRAFT'}
+              </span>
+              <span className="text-sm text-slate-500">#{invoiceNumber}</span>
+            </div>
+          </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-12 mb-6 sm:mb-8">
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start">
                 <label className={`text-sm sm:text-base font-bold ${showError ? 'text-red-600' : 'text-[#bb4d4d]'}`}>Customer</label>
                 {isConfirmed ? (
-                  <span className="sm:col-span-2 py-2 text-sm sm:text-base text-teal-700 font-medium">{customer}</span>
+                  <div className="sm:col-span-2 flex items-center gap-2">
+                    <span className="py-2 text-sm sm:text-base text-teal-700 font-medium">{customer}</span>
+                    <button 
+                      onClick={() => setShowCustomerHistory(true)}
+                      className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
+                    >
+                      History
+                    </button>
+                  </div>
                 ) : (
                   <input type="text" placeholder="Type customer name..." value={customer} onChange={(e) => setCustomer(e.target.value)} className={`sm:col-span-2 border-b outline-none py-2 text-sm sm:text-base text-teal-700 ${showError ? 'border-red-500 bg-red-50' : 'border-teal-500/30'}`} />
                 )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start">
+                <label className="text-sm sm:text-base font-bold text-[#bb4d4d]">Phone</label>
+                <input disabled={isConfirmed} type="tel" placeholder="Customer phone..." value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} className="sm:col-span-2 border-b border-slate-200 outline-none py-2 text-sm sm:text-base" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start">
+                <label className="text-sm sm:text-base font-bold text-[#bb4d4d]">GST Number</label>
+                <input disabled={isConfirmed} type="text" placeholder="GST number..." value={customerGST} onChange={(e) => setCustomerGST(e.target.value)} className="sm:col-span-2 border-b border-slate-200 outline-none py-2 text-sm sm:text-base" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-start">
                 <label className="text-sm sm:text-base font-bold text-[#bb4d4d]">Invoice Address</label>
@@ -582,6 +914,57 @@ const NewQuotation = () => {
             </div>
 
             <div className="space-y-3">
+              <div className="bg-slate-50 p-4 rounded-lg">
+                <h3 className="font-bold text-slate-700 mb-3">Company Details</h3>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <strong className="text-sm min-w-[60px]">Logo:</strong>
+                    <div className="flex items-center gap-2 flex-1">
+                      <img src={companyLogo} alt="Logo" className="w-8 h-8 object-contain border rounded" />
+                      <input 
+                        disabled={isConfirmed}
+                        type="file" 
+                        accept="image/*"
+                        onChange={handleLogoUpload}
+                        className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:bg-[#714B67] file:text-white hover:file:bg-[#5a3c52]"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <strong className="text-sm min-w-[60px]">Name:</strong>
+                    <input 
+                      disabled={isConfirmed} 
+                      type="text" 
+                      value={companyName} 
+                      onChange={(e) => setCompanyName(e.target.value)} 
+                      className="flex-1 border-b border-slate-200 outline-none py-1 text-sm bg-transparent" 
+                      placeholder="Company name"
+                    />
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <strong className="text-sm min-w-[60px] mt-1">Address:</strong>
+                    <textarea 
+                      disabled={isConfirmed} 
+                      value={companyAddress} 
+                      onChange={(e) => setCompanyAddress(e.target.value)} 
+                      className="flex-1 border-b border-slate-200 outline-none py-1 text-sm bg-transparent resize-none" 
+                      placeholder="Company address"
+                      rows="2"
+                    />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <strong className="text-sm min-w-[60px]">GST:</strong>
+                    <input 
+                      disabled={isConfirmed} 
+                      type="text" 
+                      value={companyGST} 
+                      onChange={(e) => setCompanyGST(e.target.value)} 
+                      className="flex-1 border-b border-slate-200 outline-none py-1 text-sm bg-transparent" 
+                      placeholder="GST number"
+                    />
+                  </div>
+                </div>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
                 <label className="text-sm sm:text-base font-bold">Expiration</label>
                 <input disabled={isConfirmed} type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} className="sm:col-span-2 border-b border-slate-200 outline-none py-2 text-sm sm:text-base" />
@@ -605,6 +988,30 @@ const NewQuotation = () => {
                         className="px-4 py-2 hover:bg-slate-50 cursor-pointer text-sm"
                       >
                         {term}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center relative">
+                <label className="text-sm sm:text-base font-bold">Payment Method</label>
+                <div ref={paymentMethodRef} onClick={() => !isConfirmed && setIsPaymentMethodOpen(!isPaymentMethodOpen)} className={`sm:col-span-2 py-2 text-sm sm:text-base border-b ${!isConfirmed ? 'cursor-pointer hover:border-teal-500' : 'border-transparent'} flex justify-between items-center`}>
+                  <span className="font-medium text-teal-700">{paymentMethod}</span>
+                  {!isConfirmed && <ChevronDownIcon className="w-3 h-3 text-teal-600" />}
+                </div>
+                {isPaymentMethodOpen && (
+                  <div className="absolute top-full left-0 sm:left-[33.33%] w-full sm:w-[66.66%] bg-white border shadow-xl rounded z-50 py-1 mt-1">
+                    {paymentMethods.map((method) => (
+                      <div 
+                        key={method} 
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setPaymentMethod(method); 
+                          setIsPaymentMethodOpen(false); 
+                        }} 
+                        className="px-4 py-2 hover:bg-slate-50 cursor-pointer text-sm"
+                      >
+                        {method}
                       </div>
                     ))}
                   </div>
@@ -692,14 +1099,81 @@ const NewQuotation = () => {
                   <span className="text-slate-500">Untaxed Amount:</span>
                   <span className="text-slate-700">₹ {untaxedAmount.toFixed(2)}</span>
                 </div>
+                <div className="flex justify-between items-center text-xs sm:text-sm">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" checked={includeCGST} onChange={(e) => setIncludeCGST(e.target.checked)} disabled={isConfirmed} className="w-3 h-3" />
+                    <span className="text-slate-500">CGST (9%):</span>
+                  </div>
+                  <span className="text-slate-700">₹ {includeCGST ? (untaxedAmount * 0.09).toFixed(2) : '0.00'}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs sm:text-sm">
+                  <div className="flex items-center gap-2">
+                    <input type="checkbox" checked={includeSGST} onChange={(e) => setIncludeSGST(e.target.checked)} disabled={isConfirmed} className="w-3 h-3" />
+                    <span className="text-slate-500">SGST (9%):</span>
+                  </div>
+                  <span className="text-slate-700">₹ {includeSGST ? (untaxedAmount * 0.09).toFixed(2) : '0.00'}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs sm:text-sm">
+                  <span className="text-slate-500">Advance Payment:</span>
+                  <input 
+                    disabled={isConfirmed} 
+                    type="number" 
+                    value={advancePayment} 
+                    onChange={(e) => setAdvancePayment(parseFloat(e.target.value) || 0)} 
+                    className="w-20 sm:w-24 text-right outline-none border-b border-slate-200 py-1 text-xs sm:text-sm" 
+                    placeholder="0.00"
+                  />
+                </div>
                 <div className="border-t border-slate-200 pt-2">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600 font-medium text-sm sm:text-base">Total:</span>
-                    <span className="font-bold text-slate-900 text-base sm:text-lg">₹ {totalAmount.toFixed(2)}</span>
+                    <span className="font-bold text-slate-900 text-base sm:text-lg">₹ {(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs sm:text-sm text-orange-600">
+                    <span className="font-medium">Remaining Amount:</span>
+                    <span className="font-bold">₹ {Math.max(0, (totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment).toFixed(2)}</span>
                   </div>
                 </div>
               </div>
             </div>
+            
+            {/* Terms & Conditions */}
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-bold text-slate-700 mb-3">Terms & Conditions</h3>
+                <textarea 
+                  disabled={isConfirmed} 
+                  value={termsConditions} 
+                  onChange={(e) => setTermsConditions(e.target.value)} 
+                  className="w-full h-24 border border-slate-200 rounded p-3 text-xs resize-none"
+                  placeholder="Enter terms and conditions..."
+                />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-700 mb-3">Bank Details</h3>
+                <textarea 
+                  disabled={isConfirmed} 
+                  value={bankDetails} 
+                  onChange={(e) => setBankDetails(e.target.value)} 
+                  className="w-full h-24 border border-slate-200 rounded p-3 text-xs resize-none"
+                  placeholder="Enter bank details..."
+                />
+              </div>
+            </div>
+            
+            {/* Signature Section */}
+            {showSignature && (
+              <div className="mt-8 flex justify-between items-end">
+                <div className="text-center">
+                  <div className="w-48 border-b border-slate-300 mb-2"></div>
+                  <p className="text-xs text-slate-600">Customer Signature</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-48 border-b border-slate-300 mb-2"></div>
+                  <p className="text-xs text-slate-600">Authorized Signature</p>
+                </div>
+              </div>
+            )}
           </div>
         </main>
 
@@ -709,7 +1183,9 @@ const NewQuotation = () => {
           </div>
           <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 sm:space-y-6 max-h-64 lg:max-h-none">
             {chatHistory.length === 0 ? (
-              <div className="italic text-slate-400 text-[10px] sm:text-[11px]">Creating a new record...</div>
+              <div className="italic text-slate-400 text-[10px] sm:text-[11px]">
+                {isEditing ? `Editing ${editingOrder.status.toLowerCase()}...` : 'Creating a new record...'}
+              </div>
             ) : (
               chatHistory.map((msg) => (
                 <div key={msg.id} className="flex gap-2 sm:gap-3">
@@ -727,6 +1203,57 @@ const NewQuotation = () => {
           </div>
         </aside>
       </div>
+
+      {/* Customer History Modal */}
+      {showCustomerHistory && (
+        <div className="fixed inset-0 bg-slate-900/40 z-[200] flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="font-bold text-lg">Customer History - {customer}</h3>
+              <XMarkIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowCustomerHistory(false)} />
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              {getCustomerHistory().length > 0 ? (
+                <div className="space-y-4">
+                  {getCustomerHistory().map((order, index) => (
+                    <div key={index} className="border rounded-lg p-4 hover:bg-slate-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-bold text-slate-900">{order.id}</h4>
+                          <p className="text-sm text-slate-600">{order.date}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-blue-600">₹{order.total.toFixed(2)}</p>
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold text-white ${order.paymentStatus === 'Paid' ? 'bg-green-500' : order.paymentStatus === 'Overdue' ? 'bg-red-500' : 'bg-yellow-500'}`}>
+                            {order.paymentStatus || 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+                      {order.items && order.items.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-sm font-medium text-slate-700 mb-1">Items:</p>
+                          <div className="text-xs text-slate-600">
+                            {order.items.map((item, i) => (
+                              <span key={i}>{item.product} (x{item.quantity}){i < order.items.length - 1 ? ', ' : ''}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-slate-400">
+                  <p>No previous orders found for this customer</p>
+                </div>
+              )}
+            </div>
+            <div className="p-4 bg-slate-50 border-t flex justify-end">
+              <button onClick={() => setShowCustomerHistory(false)} className="bg-white border px-4 py-2 rounded">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

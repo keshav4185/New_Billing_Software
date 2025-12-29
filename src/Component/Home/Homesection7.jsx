@@ -1,5 +1,5 @@
 // src/Component/Home/Homesection8.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 // Define the data for the feature cards
 const features = [
@@ -209,12 +209,174 @@ const FeatureCard = ({ feature }) => {
 
 
 const Homesection7 = () => {
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
+    useEffect(() => {
+        const handleMouseMove = (e) => {
+            setMousePosition({
+                x: (e.clientX / window.innerWidth) * 100,
+                y: (e.clientY / window.innerHeight) * 100
+            });
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        return () => window.removeEventListener('mousemove', handleMouseMove);
+    }, []);
+
     return (
         <section className="py-24 bg-gray-100/50 relative overflow-hidden">
-            <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center">
+            {/* Professional Billing Software Parallax Background */}
+            <div className="absolute inset-0 overflow-hidden">
+                {/* Layer 1 - Feature Interface Mockups */}
+                <div 
+                    className="absolute inset-0 opacity-18 transition-transform duration-1000 ease-out"
+                    style={{
+                        transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+                    }}
+                >
+                    {/* Multi-Currency Interface */}
+                    <div className="absolute top-16 left-16 w-64 h-40 bg-white/90 backdrop-blur-sm rounded-xl shadow-xl border border-[#8BC34A]/30 p-4 transform rotate-8">
+                        <div className="text-sm font-bold text-[#4A4A4A] mb-3">Multi-Currency</div>
+                        <div className="space-y-2">
+                            <div className="flex justify-between items-center text-xs">
+                                <span>💵 USD</span>
+                                <span className="text-[#8BC34A] font-bold">$25,000</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span>💶 EUR</span>
+                                <span className="text-[#2E4F7A] font-bold">€18,500</span>
+                            </div>
+                            <div className="flex justify-between items-center text-xs">
+                                <span>₹ INR</span>
+                                <span className="text-[#4A90E2] font-bold">₹1,85,000</span>
+                            </div>
+                        </div>
+                        <div className="mt-3 pt-2 border-t">
+                            <div className="text-xs text-[#8BC34A] font-bold">Auto Exchange Rates</div>
+                        </div>
+                    </div>
+                    
+                    {/* Invoice Templates */}
+                    <div className="absolute bottom-20 right-16 w-72 h-48 bg-white/90 backdrop-blur-sm rounded-xl shadow-xl border border-[#2E4F7A]/30 p-4 transform -rotate-6">
+                        <div className="text-sm font-bold text-[#4A4A4A] mb-3">Invoice Templates</div>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div className="bg-[#8BC34A]/20 p-2 rounded text-center">
+                                <div className="text-xs font-bold">Professional</div>
+                                <div className="text-xs text-gray-500">Clean & Modern</div>
+                            </div>
+                            <div className="bg-[#2E4F7A]/20 p-2 rounded text-center">
+                                <div className="text-xs font-bold">Corporate</div>
+                                <div className="text-xs text-gray-500">Business Ready</div>
+                            </div>
+                            <div className="bg-[#4A90E2]/20 p-2 rounded text-center">
+                                <div className="text-xs font-bold">Creative</div>
+                                <div className="text-xs text-gray-500">Colorful Design</div>
+                            </div>
+                            <div className="bg-[#8BC34A]/20 p-2 rounded text-center">
+                                <div className="text-xs font-bold">Minimal</div>
+                                <div className="text-xs text-gray-500">Simple Layout</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Layer 2 - Advanced Features */}
+                <div 
+                    className="absolute inset-0 opacity-22 transition-transform duration-700 ease-out"
+                    style={{
+                        transform: `translate(${mousePosition.x * 0.03}px, ${mousePosition.y * 0.03}px)`
+                    }}
+                >
+                    {/* Tax Management */}
+                    <div className="absolute top-1/3 left-1/4 w-56 h-36 bg-white/85 backdrop-blur-sm rounded-xl shadow-xl border border-[#8BC34A]/35 p-3 transform rotate-12">
+                        <div className="text-sm font-bold text-[#4A4A4A] mb-2">Tax Management</div>
+                        <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                                <span>GST (18%)</span>
+                                <span className="text-[#8BC34A] font-bold">₹4,500</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>CGST (9%)</span>
+                                <span className="text-[#2E4F7A] font-bold">₹2,250</span>
+                            </div>
+                            <div className="flex justify-between">
+                                <span>SGST (9%)</span>
+                                <span className="text-[#4A90E2] font-bold">₹2,250</span>
+                            </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t">
+                            <div className="text-xs text-[#8BC34A] font-bold">Auto Tax Calculation</div>
+                        </div>
+                    </div>
+                    
+                    {/* Recurring Billing */}
+                    <div className="absolute bottom-1/3 right-1/4 w-48 h-32 bg-white/85 backdrop-blur-sm rounded-xl shadow-xl border border-[#2E4F7A]/35 p-3 transform -rotate-8">
+                        <div className="text-sm font-bold text-[#4A4A4A] mb-2">Recurring Billing</div>
+                        <div className="space-y-2">
+                            <div className="flex items-center text-xs">
+                                <div className="w-2 h-2 bg-[#8BC34A] rounded mr-2"></div>
+                                <span>Monthly: 15 Active</span>
+                            </div>
+                            <div className="flex items-center text-xs">
+                                <div className="w-2 h-2 bg-[#2E4F7A] rounded mr-2"></div>
+                                <span>Quarterly: 8 Active</span>
+                            </div>
+                            <div className="flex items-center text-xs">
+                                <div className="w-2 h-2 bg-[#4A90E2] rounded mr-2"></div>
+                                <span>Yearly: 3 Active</span>
+                            </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t">
+                            <div className="text-xs text-[#2E4F7A] font-bold">Next: Tomorrow</div>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Layer 3 - Feature Icons */}
+                <div 
+                    className="absolute inset-0 overflow-hidden pointer-events-none transition-transform duration-500 ease-out"
+                    style={{
+                        transform: `translate(${mousePosition.x * 0.04}px, ${mousePosition.y * 0.04}px)`
+                    }}
+                >
+                    {/* Feature Icons */}
+                    <div className="absolute top-1/4 right-1/3 text-3xl text-[#8BC34A] opacity-25 animate-bounce">📊</div>
+                    <div className="absolute top-2/3 left-1/6 text-2xl text-[#2E4F7A] opacity-22 animate-bounce" style={{animationDelay: '1s'}}>💱</div>
+                    <div className="absolute bottom-1/4 right-1/5 text-2xl text-[#4A90E2] opacity-25 animate-bounce" style={{animationDelay: '2s'}}>⚙️</div>
+                    <div className="absolute top-1/2 left-1/8 text-2xl text-[#8BC34A] opacity-22 animate-bounce" style={{animationDelay: '0.5s'}}>📄</div>
+                    <div className="absolute top-1/6 right-1/6 text-xl text-[#2E4F7A] opacity-20 animate-bounce" style={{animationDelay: '1.5s'}}>🌍</div>
+                    
+                    {/* Geometric Elements */}
+                    <div className="absolute top-1/6 left-1/3 w-6 h-6 border-2 border-[#8BC34A] opacity-18 rounded animate-spin" style={{animationDuration: '15s'}}></div>
+                    <div className="absolute bottom-1/3 right-1/6 w-4 h-4 bg-[#2E4F7A] opacity-22 rounded-full animate-pulse"></div>
+                    <div className="absolute top-3/4 left-1/2 w-8 h-1 bg-[#4A90E2] opacity-20 rounded animate-pulse" style={{animationDelay: '1s'}}></div>
+                </div>
+                
+                {/* Layer 4 - Feature Connection Lines */}
+                <div 
+                    className="absolute inset-0 overflow-hidden pointer-events-none transition-transform duration-800 ease-out"
+                    style={{
+                        transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+                    }}
+                >
+                    <svg className="absolute inset-0 w-full h-full" style={{opacity: 0.15}}>
+                        <defs>
+                            <linearGradient id="featureFlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#8BC34A" />
+                                <stop offset="50%" stopColor="#2E4F7A" />
+                                <stop offset="100%" stopColor="#4A90E2" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M200,180 Q500,120 800,280 T1100,160" stroke="url(#featureFlow)" strokeWidth="2" fill="none" className="animate-pulse" />
+                        <path d="M150,350 Q450,250 750,400 T1050,280" stroke="url(#featureFlow)" strokeWidth="1" fill="none" className="animate-pulse" style={{animationDelay: '1s'}} />
+                        <path d="M100,500 Q400,400 700,550 T1000,450" stroke="url(#featureFlow)" strokeWidth="1" fill="none" className="animate-pulse" style={{animationDelay: '2s'}} />
+                    </svg>
+                </div>
+            </div>
+            <div className="max-w-7xl mx-auto px-6 lg:px-8 text-center relative z-10">
                 
                 {/* Headline: "All the features done right." */}
-                <h2 className="text-4xl md:text-4xl font-headline text-green-700  leading-tight mb-12 font-extrabold">
+                <h2 className="text-4xl md:text-4xl font-headline bg-gradient-to-r from-[#4A4A4A] via-[#8BC34A] to-[#2E4F7A] bg-clip-text text-transparent leading-tight mb-12 font-extrabold">
                     All the <span className="highlight-bg pb-1 inline-block">features</span> done right.
                 </h2>
                 

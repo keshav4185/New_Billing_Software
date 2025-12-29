@@ -10,7 +10,8 @@ import {
   Bars3Icon,
   Cog6ToothIcon,
   PresentationChartLineIcon,
-  ChartPieIcon
+  ChartPieIcon,
+  ArrowLeftIcon
 } from '@heroicons/react/24/outline';
 
 const sales = () => {
@@ -60,6 +61,13 @@ const sales = () => {
       {/* --- TOP CONTROL BAR --- */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-2 sm:px-4 py-2 bg-white shrink-0 gap-3">
         <div className="flex items-center gap-2">
+          <button 
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-1 px-2 py-1 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-sm transition-colors"
+          >
+            <ArrowLeftIcon className="w-4 h-4" />
+            Back
+          </button>
           <h1 className="text-base sm:text-[18px] text-slate-700 font-normal">Sales Analysis</h1>
           <Cog6ToothIcon className="w-4 h-4 text-slate-400 cursor-pointer hover:text-slate-600" />
         </div>

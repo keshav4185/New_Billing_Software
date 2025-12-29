@@ -75,39 +75,140 @@ const Homesection1 = () => {
             {/* Overlay gradient */}
             <div className="absolute inset-0 bg-gradient-to-br from-purple-50/80 via-blue-50/60 to-indigo-100/80"></div>
             
-            {/* Parallax Layer 1 - Financial Elements */}
+            {/* Parallax Layer 1 - Financial Dashboard Elements */}
             <div 
                 className="absolute inset-0 opacity-15 transition-transform duration-1000 ease-out"
                 style={{
                     transform: `translate(${mousePosition.x * 0.03}px, ${mousePosition.y * 0.03}px)`
                 }}
             >
-                <div className="absolute top-20 left-20 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-2xl pulse-slow"></div>
-                <div className="absolute bottom-20 right-20 w-80 h-80 bg-indigo-400 rounded-full mix-blend-multiply filter blur-2xl pulse-slow" style={{animationDelay: '2s'}}></div>
+                {/* Invoice Card Mockup */}
+                <div className="absolute top-32 left-32 w-64 h-40 bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl border border-[#8BC34A]/30 p-4 transform rotate-12">
+                    <div className="flex justify-between items-center mb-3">
+                        <div className="h-3 bg-[#8BC34A] rounded w-16"></div>
+                        <div className="text-xs text-[#2E4F7A] font-bold">#INV-001</div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="h-2 bg-gray-300 rounded w-3/4"></div>
+                        <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+                        <div className="h-2 bg-gray-300 rounded w-2/3"></div>
+                    </div>
+                    <div className="mt-3 flex justify-between">
+                        <div className="h-2 bg-[#2E4F7A] rounded w-1/4"></div>
+                        <div className="text-xs font-bold text-[#8BC34A]">₹12,500</div>
+                    </div>
+                </div>
+                
+                {/* Payment Status Dashboard */}
+                <div className="absolute bottom-32 right-32 w-56 h-32 bg-white/90 backdrop-blur-sm rounded-xl shadow-2xl border border-[#2E4F7A]/30 p-4 transform -rotate-6">
+                    <div className="text-xs font-bold text-[#4A4A4A] mb-2">Payment Status</div>
+                    <div className="flex justify-between mb-2">
+                        <div className="flex items-center">
+                            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                            <span className="text-xs">Paid</span>
+                        </div>
+                        <span className="text-xs font-bold text-green-600">₹8,500</span>
+                    </div>
+                    <div className="flex justify-between mb-2">
+                        <div className="flex items-center">
+                            <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2"></div>
+                            <span className="text-xs">Pending</span>
+                        </div>
+                        <span className="text-xs font-bold text-yellow-600">₹4,000</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <div className="flex items-center">
+                            <div className="w-2 h-2 bg-red-500 rounded-full mr-2"></div>
+                            <span className="text-xs">Overdue</span>
+                        </div>
+                        <span className="text-xs font-bold text-red-600">₹1,200</span>
+                    </div>
+                </div>
+                
+                <div className="absolute top-20 left-20 w-64 h-64 bg-[#8BC34A] rounded-full mix-blend-multiply filter blur-2xl pulse-slow"></div>
+                <div className="absolute bottom-20 right-20 w-80 h-80 bg-[#2E4F7A] rounded-full mix-blend-multiply filter blur-2xl pulse-slow" style={{animationDelay: '2s'}}></div>
             </div>
             
-            {/* Parallax Layer 2 - Chart Elements */}
+            {/* Parallax Layer 2 - Analytics & Charts */}
             <div 
                 className="absolute inset-0 opacity-12 transition-transform duration-700 ease-out"
                 style={{
                     transform: `translate(${mousePosition.x * 0.06}px, ${mousePosition.y * 0.06}px)`
                 }}
             >
-                <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl pulse-slow" style={{animationDelay: '1s'}}></div>
+                {/* Revenue Chart */}
+                <div className="absolute top-1/2 left-1/4 w-48 h-32 bg-white/85 backdrop-blur-sm rounded-lg shadow-xl border border-[#4A90E2]/30 p-3 transform rotate-3">
+                    <div className="text-xs font-bold text-[#4A4A4A] mb-2">Monthly Revenue</div>
+                    <div className="flex items-end justify-between h-16">
+                        <div className="w-3 bg-[#8BC34A] rounded-t animate-pulse" style={{height: '60%'}}></div>
+                        <div className="w-3 bg-[#2E4F7A] rounded-t animate-pulse" style={{height: '80%', animationDelay: '0.5s'}}></div>
+                        <div className="w-3 bg-[#4A90E2] rounded-t animate-pulse" style={{height: '40%', animationDelay: '1s'}}></div>
+                        <div className="w-3 bg-[#8BC34A] rounded-t animate-pulse" style={{height: '90%', animationDelay: '1.5s'}}></div>
+                        <div className="w-3 bg-[#2E4F7A] rounded-t animate-pulse" style={{height: '70%', animationDelay: '2s'}}></div>
+                    </div>
+                </div>
+                
+                {/* Customer List */}
+                <div className="absolute bottom-1/3 left-1/6 w-40 h-24 bg-white/85 backdrop-blur-sm rounded-lg shadow-xl border border-[#8BC34A]/30 p-2 transform -rotate-12">
+                    <div className="text-xs font-bold text-[#4A4A4A] mb-1">Top Customers</div>
+                    <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                            <span>ABC Corp</span>
+                            <span className="text-[#8BC34A] font-bold">₹25K</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span>XYZ Ltd</span>
+                            <span className="text-[#2E4F7A] font-bold">₹18K</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                            <span>Tech Inc</span>
+                            <span className="text-[#4A90E2] font-bold">₹12K</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="absolute top-1/3 right-1/4 w-96 h-96 bg-[#4A90E2] rounded-full mix-blend-multiply filter blur-3xl pulse-slow" style={{animationDelay: '1s'}}></div>
             </div>
             
-            {/* Parallax Layer 3 - Floating UI Elements */}
+            {/* Parallax Layer 3 - Financial Icons & Currency */}
             <div 
                 className="absolute inset-0 overflow-hidden pointer-events-none transition-transform duration-500 ease-out"
                 style={{
                     transform: `translate(${mousePosition.x * 0.08}px, ${mousePosition.y * 0.08}px)`
                 }}
             >
-                <div className="absolute top-1/4 left-1/5 w-6 h-6 bg-purple-500 rounded opacity-25 float-animation"></div>
-                <div className="absolute top-1/3 right-1/5 w-8 h-8 bg-blue-500 rounded-full opacity-20 float-animation" style={{animationDelay: '1s'}}></div>
-                <div className="absolute bottom-1/3 left-1/3 w-4 h-4 bg-indigo-500 rounded opacity-25 float-animation" style={{animationDelay: '2s'}}></div>
-                <div className="absolute top-1/2 right-1/3 w-6 h-6 bg-purple-400 rounded-full opacity-20 float-animation" style={{animationDelay: '3s'}}></div>
-                <div className="absolute top-3/4 left-1/2 w-5 h-5 bg-blue-400 rounded opacity-25 float-animation" style={{animationDelay: '4s'}}></div>
+                {/* Currency Symbols */}
+                <div className="absolute top-1/4 left-1/5 text-3xl text-[#8BC34A] opacity-20 animate-bounce">₹</div>
+                <div className="absolute top-1/3 right-1/5 text-2xl text-[#2E4F7A] opacity-15 animate-bounce" style={{animationDelay: '1s'}}>$</div>
+                <div className="absolute bottom-1/3 left-1/3 text-xl text-[#4A90E2] opacity-20 animate-bounce" style={{animationDelay: '2s'}}>€</div>
+                <div className="absolute top-1/2 right-1/3 text-lg text-[#8BC34A] opacity-15 animate-bounce" style={{animationDelay: '3s'}}>£</div>
+                <div className="absolute top-3/4 left-1/2 text-2xl text-[#2E4F7A] opacity-20 animate-bounce" style={{animationDelay: '4s'}}>¥</div>
+                
+                {/* Financial Icons */}
+                <div className="absolute top-1/6 left-1/4 w-8 h-8 border-2 border-[#8BC34A] opacity-15 rounded-full animate-spin" style={{animationDuration: '10s'}}></div>
+                <div className="absolute bottom-1/4 right-1/6 w-6 h-6 bg-[#2E4F7A] opacity-20 transform rotate-45 animate-pulse"></div>
+                <div className="absolute top-2/3 left-1/6 w-10 h-2 bg-[#4A90E2] opacity-15 rounded animate-pulse" style={{animationDelay: '1s'}}></div>
+            </div>
+            
+            {/* Parallax Layer 4 - Data Flow Lines */}
+            <div 
+                className="absolute inset-0 overflow-hidden pointer-events-none transition-transform duration-800 ease-out"
+                style={{
+                    transform: `translate(${mousePosition.x * 0.04}px, ${mousePosition.y * 0.04}px)`
+                }}
+            >
+                <svg className="absolute inset-0 w-full h-full" style={{opacity: 0.08}}>
+                    <defs>
+                        <linearGradient id="flowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#8BC34A" />
+                            <stop offset="50%" stopColor="#2E4F7A" />
+                            <stop offset="100%" stopColor="#4A90E2" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M100,300 Q400,150 700,400 T1100,200" stroke="url(#flowGradient)" strokeWidth="3" fill="none" className="animate-pulse" />
+                    <path d="M0,500 Q300,250 600,450 T900,300" stroke="url(#flowGradient)" strokeWidth="2" fill="none" className="animate-pulse" style={{animationDelay: '1.5s'}} />
+                    <path d="M200,100 Q500,350 800,150 T1200,400" stroke="url(#flowGradient)" strokeWidth="1" fill="none" className="animate-pulse" style={{animationDelay: '3s'}} />
+                </svg>
             </div>
             
             {/* Content with subtle parallax */}
@@ -119,7 +220,7 @@ const Homesection1 = () => {
             >
             
             {/* Headline */}
-            <h1 className="text-4xl md:text-7xl font-headline leading-none mb-6 text-green-700 font-extrabold drop-shadow-lg">
+            <h1 className="text-4xl md:text-7xl font-headline leading-none mb-6 bg-gradient-to-r from-[#4A4A4A] via-[#8BC34A] to-[#2E4F7A] bg-clip-text text-transparent font-extrabold drop-shadow-lg">
              Smart Invoice
             </h1>
             

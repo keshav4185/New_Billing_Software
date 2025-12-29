@@ -8,4 +8,4 @@ const productpage = () => {
   )
 }
 
-export default productpage
+export default productpage;

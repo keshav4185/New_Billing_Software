@@ -48,7 +48,7 @@ function App() {
         <Route path="/trypage" element={<LayoutWithNavbar><Tryhome /></LayoutWithNavbar>} />
         <Route path="/tutorial" element={<LayoutWithNavbar><Tutorial /></LayoutWithNavbar>} />
         <Route path="/documentation" element={<LayoutWithNavbar><DocumentationPage /></LayoutWithNavbar>} />
-        <Route path="/welcome" element={<LayoutWithNavbar><Welcomepage /></LayoutWithNavbar>} />
+        <Route path="/welcome" element={<Welcomepage />} />
         <Route path="/tryapppage" element={<LayoutWithNavbar><Tryapppage /></LayoutWithNavbar>} />
         <Route path="/myaccountpage" element={<LayoutWithNavbar><Myaccountpage /></LayoutWithNavbar>} />
       <Route path="/salespage" element={<Salespage />} />

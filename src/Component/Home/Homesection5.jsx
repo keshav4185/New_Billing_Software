@@ -90,25 +90,147 @@ const Homesection5 = () => {
                 }}
             ></div>
             
-            {/* Parallax Layer 1 - Payment Elements */}
+            {/* Parallax Layer 1 - Professional Billing Elements */}
             <div 
-                className="absolute inset-0 opacity-15 transition-transform duration-800 ease-out"
+                className="absolute inset-0 opacity-5 transition-transform duration-800 ease-out"
+                style={{
+                    transform: `translate(${mousePosition.x * 0.01}px, ${mousePosition.y * 0.01}px)`
+                }}
+            >
+                {/* Payment Gateway Interface */}
+                <div className="absolute top-32 left-16 w-72 h-48 bg-white/60 backdrop-blur-sm rounded-xl shadow-lg border border-[#8BC34A]/10 p-5 transform rotate-6">
+                    <div className="text-sm font-bold text-[#4A4A4A] mb-3">Payment Gateway</div>
+                    <div className="space-y-3">
+                        <div className="flex items-center p-2 bg-[#8BC34A]/5 rounded">
+                            <div className="w-4 h-4 bg-[#8BC34A] rounded mr-3"></div>
+                            <span className="text-xs">Credit/Debit Cards</span>
+                        </div>
+                        <div className="flex items-center p-2 bg-[#2E4F7A]/5 rounded">
+                            <div className="w-4 h-4 bg-[#2E4F7A] rounded mr-3"></div>
+                            <span className="text-xs">UPI & Digital Wallets</span>
+                        </div>
+                        <div className="flex items-center p-2 bg-[#4A90E2]/5 rounded">
+                            <div className="w-4 h-4 bg-[#4A90E2] rounded mr-3"></div>
+                            <span className="text-xs">Net Banking</span>
+                        </div>
+                    </div>
+                    <div className="mt-3 pt-2 border-t">
+                        <div className="text-xs font-bold text-[#8BC34A]">Secure Payment Processing</div>
+                    </div>
+                </div>
+                
+                {/* Transaction History */}
+                <div className="absolute bottom-32 right-16 w-64 h-40 bg-white/60 backdrop-blur-sm rounded-xl shadow-lg border border-[#2E4F7A]/10 p-4 transform -rotate-8">
+                    <div className="text-sm font-bold text-[#4A4A4A] mb-3">Recent Transactions</div>
+                    <div className="space-y-2">
+                        <div className="flex justify-between items-center text-xs">
+                            <span>Payment Received</span>
+                            <span className="text-[#8BC34A] font-bold">+₹25,000</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                            <span>Invoice Sent</span>
+                            <span className="text-[#2E4F7A] font-bold">₹18,500</span>
+                        </div>
+                        <div className="flex justify-between items-center text-xs">
+                            <span>Payment Pending</span>
+                            <span className="text-yellow-600 font-bold">₹12,750</span>
+                        </div>
+                    </div>
+                    <div className="mt-3 pt-2 border-t">
+                        <div className="text-xs text-[#4A90E2] font-bold">Balance: ₹1,45,250</div>
+                    </div>
+                </div>
+                
+                <div className="absolute top-20 left-1/4 w-64 h-64 bg-[#8BC34A] rounded-full mix-blend-multiply filter blur-3xl animate-pulse opacity-30"></div>
+                <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-[#2E4F7A] rounded-full mix-blend-multiply filter blur-3xl animate-pulse opacity-30" style={{animationDelay: '2s'}}></div>
+            </div>
+            
+            {/* Parallax Layer 2 - Payment Processing Elements */}
+            <div 
+                className="absolute inset-0 opacity-8 transition-transform duration-600 ease-out"
+                style={{
+                    transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`
+                }}
+            >
+                {/* Payment Success Notification */}
+                <div className="absolute top-1/2 left-1/6 w-56 h-24 bg-white/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#8BC34A]/15 p-3 transform rotate-12">
+                    <div className="flex items-center">
+                        <div className="w-8 h-8 bg-[#8BC34A] rounded-full flex items-center justify-center mr-3">
+                            <span className="text-white text-sm">✓</span>
+                        </div>
+                        <div>
+                            <div className="text-sm font-bold text-[#4A4A4A]">Payment Successful!</div>
+                            <div className="text-xs text-gray-500">₹25,000 received from ABC Corp</div>
+                        </div>
+                    </div>
+                </div>
+                
+                {/* Payment Methods */}
+                <div className="absolute bottom-1/3 right-1/4 w-48 h-32 bg-white/50 backdrop-blur-sm rounded-xl shadow-lg border border-[#2E4F7A]/15 p-3 transform -rotate-6">
+                    <div className="text-sm font-bold text-[#4A4A4A] mb-2">Accepted Methods</div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="bg-[#8BC34A]/10 p-1 rounded text-center">
+                            <div className="text-xs">VISA</div>
+                        </div>
+                        <div className="bg-[#2E4F7A]/10 p-1 rounded text-center">
+                            <div className="text-xs">UPI</div>
+                        </div>
+                        <div className="bg-[#4A90E2]/10 p-1 rounded text-center">
+                            <div className="text-xs">GPay</div>
+                        </div>
+                        <div className="bg-[#8BC34A]/10 p-1 rounded text-center">
+                            <div className="text-xs">PayTM</div>
+                        </div>
+                        <div className="bg-[#2E4F7A]/10 p-1 rounded text-center">
+                            <div className="text-xs">HDFC</div>
+                        </div>
+                        <div className="bg-[#4A90E2]/10 p-1 rounded text-center">
+                            <div className="text-xs">SBI</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-[#4A90E2] rounded-full mix-blend-multiply filter blur-2xl animate-pulse opacity-20" style={{animationDelay: '1s'}}></div>
+            </div>
+            
+            {/* Parallax Layer 3 - Financial Icons & Currency */}
+            <div 
+                className="absolute inset-0 overflow-hidden pointer-events-none transition-transform duration-500 ease-out"
                 style={{
                     transform: `translate(${mousePosition.x * 0.03}px, ${mousePosition.y * 0.03}px)`
                 }}
             >
-                <div className="absolute top-20 left-1/4 w-64 h-64 bg-purple-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
-                <div className="absolute bottom-20 right-1/4 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl"></div>
+                {/* Payment Icons */}
+                <div className="absolute top-1/4 right-1/3 text-4xl text-[#8BC34A] opacity-5 animate-bounce">⚡</div>
+                <div className="absolute top-2/3 left-1/5 text-3xl text-[#2E4F7A] opacity-4 animate-bounce" style={{animationDelay: '1s'}}>💳</div>
+                <div className="absolute bottom-1/4 right-1/5 text-2xl text-[#4A90E2] opacity-5 animate-bounce" style={{animationDelay: '2s'}}>💰</div>
+                <div className="absolute top-1/2 left-1/8 text-3xl text-[#8BC34A] opacity-4 animate-bounce" style={{animationDelay: '0.5s'}}>₹</div>
+                
+                {/* Geometric Payment Elements */}
+                <div className="absolute top-1/6 left-1/3 w-8 h-8 border-2 border-[#8BC34A] opacity-3 rounded animate-spin" style={{animationDuration: '10s'}}></div>
+                <div className="absolute bottom-1/3 right-1/6 w-6 h-6 bg-[#2E4F7A] opacity-5 transform rotate-45 animate-pulse"></div>
+                <div className="absolute top-3/4 left-1/2 w-10 h-2 bg-[#4A90E2] opacity-4 rounded animate-pulse" style={{animationDelay: '1.5s'}}></div>
             </div>
             
-            {/* Parallax Layer 2 - Lightning Effects */}
+            {/* Parallax Layer 4 - Payment Flow Lines */}
             <div 
-                className="absolute inset-0 opacity-20 transition-transform duration-600 ease-out"
+                className="absolute inset-0 overflow-hidden pointer-events-none transition-transform duration-800 ease-out"
                 style={{
-                    transform: `translate(${mousePosition.x * 0.05}px, ${mousePosition.y * 0.05}px)`
+                    transform: `translate(${mousePosition.x * 0.015}px, ${mousePosition.y * 0.015}px)`
                 }}
             >
-                <div className="absolute top-1/3 left-1/3 w-72 h-72 bg-yellow-300 rounded-full mix-blend-multiply filter blur-2xl"></div>
+                <svg className="absolute inset-0 w-full h-full" style={{opacity: 0.03}}>
+                    <defs>
+                        <linearGradient id="paymentFlow" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stopColor="#8BC34A" />
+                            <stop offset="50%" stopColor="#2E4F7A" />
+                            <stop offset="100%" stopColor="#4A90E2" />
+                        </linearGradient>
+                    </defs>
+                    <path d="M100,200 Q400,100 700,300 T1000,150" stroke="url(#paymentFlow)" strokeWidth="3" fill="none" className="animate-pulse" />
+                    <path d="M200,400 Q500,250 800,450 T1100,200" stroke="url(#paymentFlow)" strokeWidth="2" fill="none" className="animate-pulse" style={{animationDelay: '1s'}} />
+                    <path d="M50,350 Q350,150 650,400 T950,250" stroke="url(#paymentFlow)" strokeWidth="1" fill="none" className="animate-pulse" style={{animationDelay: '2s'}} />
+                </svg>
             </div>
             
             {/* Top Headline Area (outside the main content box) */}
@@ -123,7 +245,7 @@ const Homesection5 = () => {
                         So fast you'll get a ticket
                         <span className="block text-2xl mt-1">↑</span>
                     </p>
-                    <h2 className="font-headline text-4xl md:text-4xl leading-tight elc text-green-700  font-extrabold   ">
+                    <h2 className="font-headline text-4xl md:text-4xl leading-tight elc bg-gradient-to-r from-[#4A4A4A] via-[#8BC34A] to-[#2E4F7A] bg-clip-text text-transparent font-extrabold   ">
                         Get paid in a <span className="text-purple-main">Flash</span>
                     </h2>
                     {/* Lightning Bolt Doodles with Parallax */}

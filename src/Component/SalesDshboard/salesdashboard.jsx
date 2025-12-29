@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   MagnifyingGlassIcon, TableCellsIcon, 
   Cog6ToothIcon, ChevronDownIcon, 
-  ListBulletIcon, Bars3Icon, XMarkIcon
+  ListBulletIcon, Bars3Icon, XMarkIcon,
+  PrinterIcon, PencilIcon, TrashIcon
 } from '@heroicons/react/24/outline';
+import logo from '../../assets/logo.jpg';
 
 const SalesDashboard = () => {
   const navigate = useNavigate(); 
@@ -37,6 +39,171 @@ const SalesDashboard = () => {
     const updatedQuotations = quotations.filter(q => q.id !== id);
     setQuotations(updatedQuotations);
     localStorage.setItem('quotations', JSON.stringify(updatedQuotations));
+  };
+
+  const printQuotation = (q) => {
+    const printWindow = window.open('', '_blank');
+    const untaxedAmount = q.items?.reduce((acc, item) => {
+      const base = item.quantity * item.unitPrice;
+      return acc + (base - (base * (item.discount || 0) / 100));
+    }, 0) || 0;
+    
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print ${q.status} - ${q.id}</title>
+          <style>
+            body { font-family: 'Arial', sans-serif; margin: 0; padding: 40px; color: #333; }
+            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #714B67; padding-bottom: 20px; margin-bottom: 30px; }
+            .logo-section { display: flex; align-items: center; gap: 15px; }
+            .logo-img { height: 60px; width: auto; }
+            .company-info { text-align: right; }
+            @media print { .logo-img { height: 50px; } }
+            @media screen and (max-width: 768px) { .logo-img { height: 40px; } }
+            .title { font-size: 32px; font-weight: bold; color: #714B67; margin: 0; }
+            .subtitle { color: #666; margin: 5px 0 0 0; }
+            .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 30px 0; }
+            .info-block h4 { color: #714B67; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; }
+            .info-block p { margin: 5px 0; line-height: 1.4; }
+            table { width: 100%; border-collapse: collapse; margin: 30px 0; }
+            th { background: #f8f9fa; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold; color: #714B67; }
+            td { padding: 12px; border: 1px solid #ddd; }
+            .total-section { text-align: right; margin-top: 30px; }
+            .total-row { display: flex; justify-content: flex-end; margin: 5px 0; }
+            .total-label { width: 150px; text-align: right; padding-right: 20px; }
+            .total-amount { font-weight: bold; width: 100px; }
+            .grand-total { font-size: 18px; color: #714B67; border-top: 2px solid #714B67; padding-top: 10px; margin-top: 10px; }
+            .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
+            .terms-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+            .terms-block h4 { color: #714B67; font-size: 14px; margin: 0 0 10px 0; }
+            .terms-block p { font-size: 12px; line-height: 1.4; margin: 0; white-space: pre-line; }
+            .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
+            .signature-box { text-align: center; width: 200px; }
+            .signature-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 5px; }
+            @media print { body { margin: 0; } }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo-section">
+              <img src="${logo}" alt="Company Logo" class="logo-img" />
+            </div>
+            <div class="company-info">
+              <h1 class="title">${q.status.toUpperCase()}</h1>
+              <p class="subtitle">${q.status === 'Quotation' ? 'Quote' : 'Order'} #: ${q.id}</p>
+              <p class="subtitle">Date: ${q.date}</p>
+            </div>
+          </div>
+          
+          <div class="info-section">
+            <div class="info-block">
+              <h4>Bill To:</h4>
+              <p><strong>${q.customer}</strong></p>
+              ${q.customerPhone ? `<p>Phone: ${q.customerPhone}</p>` : ''}
+              ${q.customerGST ? `<p>GST: ${q.customerGST}</p>` : ''}
+            </div>
+            <div class="info-block">
+              <h4>${q.status} Details:</h4>
+              <p><strong>Payment Terms:</strong> ${q.paymentTerms || 'Immediate Payment'}</p>
+              <p><strong>Payment Method:</strong> ${q.paymentMethod || 'Cash'}</p>
+              ${q.expirationDate ? `<p><strong>Expiration:</strong> ${q.expirationDate}</p>` : ''}
+            </div>
+          </div>
+          
+          ${q.items && q.items.length > 0 ? `
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 40%;">Product/Service</th>
+                  <th style="width: 10%; text-align: center;">Qty</th>
+                  <th style="width: 15%; text-align: right;">Unit Price</th>
+                  <th style="width: 10%; text-align: center;">Tax %</th>
+                  <th style="width: 10%; text-align: center;">Disc %</th>
+                  <th style="width: 15%; text-align: right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${q.items.map(item => {
+                  const base = item.quantity * item.unitPrice;
+                  const afterDiscount = base - (base * (item.discount || 0) / 100);
+                  const finalAmount = afterDiscount + (afterDiscount * (item.taxes || 0) / 100);
+                  return `
+                    <tr>
+                      <td><strong>${item.product || 'Product'}</strong></td>
+                      <td style="text-align: center;">${item.quantity}</td>
+                      <td style="text-align: right;">₹${item.unitPrice.toFixed(2)}</td>
+                      <td style="text-align: center;">${item.taxes || 0}%</td>
+                      <td style="text-align: center;">${item.discount || 0}%</td>
+                      <td style="text-align: right;">₹${finalAmount.toFixed(2)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          ` : '<div style="text-align: center; padding: 20px; color: #666;">No items added</div>'}
+          
+          <div class="total-section">
+            <div class="total-row">
+              <div class="total-label">Subtotal:</div>
+              <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
+            </div>
+            <div class="total-row">
+              <div class="total-label">CGST (9%):</div>
+              <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
+            </div>
+            <div class="total-row">
+              <div class="total-label">SGST (9%):</div>
+              <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
+            </div>
+            <div class="total-row grand-total">
+              <div class="total-label">Total:</div>
+              <div class="total-amount">₹${(q.total + (untaxedAmount * 0.18)).toFixed(2)}</div>
+            </div>
+            ${q.advancePayment && q.advancePayment > 0 ? `
+              <div class="total-row" style="color: #28a745; font-weight: bold; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+                <div class="total-label">Advance Paid:</div>
+                <div class="total-amount">₹${q.advancePayment.toFixed(2)}</div>
+              </div>
+              <div class="total-row" style="color: #dc3545; font-weight: bold;">
+                <div class="total-label">Remaining Amount:</div>
+                <div class="total-amount">₹${Math.max(0, (q.total + (untaxedAmount * 0.18)) - q.advancePayment).toFixed(2)}</div>
+              </div>
+            ` : ''}
+          </div>
+          
+          <div class="terms-section">
+            <div class="terms-block">
+              <h4>Terms & Conditions</h4>
+              <p>${q.termsConditions || '1. Payment due within specified terms\n2. Goods once sold will not be taken back\n3. Subject to local jurisdiction'}</p>
+            </div>
+            <div class="terms-block">
+              <h4>Bank Details</h4>
+              <p>${q.bankDetails || 'Bank: HDFC Bank\nA/C: 1234567890\nIFSC: HDFC0001234'}</p>
+            </div>
+          </div>
+          
+          <div class="signature-section">
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <p>Customer Signature</p>
+            </div>
+            <div class="signature-box">
+              <div class="signature-line"></div>
+              <p>Authorized Signature</p>
+              <p style="font-size: 10px; margin-top: 5px;">Smart Business Solutions</p>
+            </div>
+          </div>
+          
+          <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>Smart Business Solutions | www.smart.com</p>
+            <p>Generated on ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+          </div>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.print();
   };
 
   useEffect(() => {
@@ -249,14 +416,14 @@ const SalesDashboard = () => {
                 <th className="py-3 px-2">Customer</th>
                 <th className="py-3 px-2 text-right pr-4">Total</th>
                 <th className="py-3 px-2 pl-4">Status</th>
-                <th className="py-3 px-2 w-16">Actions</th>
+                <th className="py-3 px-2 w-24">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredData.length > 0 ? (
-                filteredData.map((q) => (
+                filteredData.map((q, index) => (
                   <tr 
-                    key={q.id} 
+                    key={`${q.id}-${index}`} 
                     className="hover:bg-slate-50 cursor-pointer border-b group transition-colors text-[14px]"
                     onClick={() => {
                       setSelectedQuotation(q);
@@ -276,13 +443,29 @@ const SalesDashboard = () => {
                       </span>
                     </td>
                     <td className="py-3 px-2 border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
-                      <button 
-                        onClick={() => deleteQuotation(q.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                        title="Delete"
-                      >
-                        <XMarkIcon className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        <button 
+                          onClick={() => printQuotation(q)}
+                          className="text-blue-500 hover:text-blue-700 p-1"
+                          title="Print"
+                        >
+                          <PrinterIcon className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => navigate('/snewpage', { state: { order: q } })}
+                          className="text-green-500 hover:text-green-700 p-1"
+                          title="Edit"
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => deleteQuotation(q.id)}
+                          className="text-red-500 hover:text-red-700 p-1"
+                          title="Delete"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
