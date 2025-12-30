@@ -6,15 +6,15 @@ import {
 } from '@heroicons/react/24/outline';
 import logo from '../../assets/logo.jpg';
 
-const NewQuotation = () => {
+const NewInvoice = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const editingOrder = location.state?.order;
   const isEditing = !!editingOrder;
   
-  const [isConfirmed, setIsConfirmed] = useState(editingOrder?.status === 'Sales Order' || false);
+  const [isConfirmed, setIsConfirmed] = useState(editingOrder?.status === 'Invoice' || false);
   const [showCancelModal, setShowCancelModal] = useState(false); 
-  const [activeTab, setActiveTab] = useState('Order Lines');
+  const [activeTab, setActiveTab] = useState('Invoice Lines');
   const [customer, setCustomer] = useState(editingOrder?.customer || '');
   const [customerPhone, setCustomerPhone] = useState(editingOrder?.customerPhone || '');
   const [customerGST, setCustomerGST] = useState(editingOrder?.customerGST || '');
@@ -24,26 +24,34 @@ const NewQuotation = () => {
   const [selectedColor, setSelectedColor] = useState('#1F3A5F');
   const [footerText, setFooterText] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
+  const [invoiceDate, setInvoiceDate] = useState(editingOrder?.invoiceDate || new Date().toISOString().split('T')[0]);
   const [expirationDate, setExpirationDate] = useState(editingOrder?.expirationDate || '');
+  const [dueDate, setDueDate] = useState(editingOrder?.dueDate || '');
   const [invoiceAddress, setInvoiceAddress] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [shippingCost, setShippingCost] = useState(0);
+  const [chatHistory, setChatHistory] = useState([]);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [selectedTerm, setSelectedTerm] = useState(editingOrder?.paymentTerms || 'Immediate Payment');
+  const [selectedTerm, setSelectedTerm] = useState(editingOrder?.paymentTerms || 'Net 30');
   const paymentRef = useRef(null);
   const [orderLines, setOrderLines] = useState(editingOrder?.items || []);
   const [editingOrderId, setEditingOrderId] = useState(editingOrder?.id || null);
-  const [paymentMethod, setPaymentMethod] = useState(editingOrder?.paymentMethod || 'Cash');
+  const [paymentMethod, setPaymentMethod] = useState(editingOrder?.paymentMethod || 'Bank Transfer');
   const [isPaymentMethodOpen, setIsPaymentMethodOpen] = useState(false);
   const [paymentMethodRef, setPaymentMethodRef] = useState(useRef(null));
   const [companyName, setCompanyName] = useState('');
   const [companyAddress, setCompanyAddress] = useState('123 Business Street, City - 400001');
   const [companyGST, setCompanyGST] = useState('27XXXXX1234X1ZX');
   const [companyLogo, setCompanyLogo] = useState(logo);
+  const [termsConditions, setTermsConditions] = useState('1. Payment due within specified terms\n2. Late payment charges may apply\n3. Subject to local jurisdiction');
+  const [bankDetails, setBankDetails] = useState('Bank: HDFC Bank\nA/C: 1234567890\nIFSC: HDFC0001234');
   const [showSignature, setShowSignature] = useState(true);
+  const [showQRScanner, setShowQRScanner] = useState(false);
+  const [upiId, setUpiId] = useState('smartbusiness@paytm');
   const [includeCGST, setIncludeCGST] = useState(true);
   const [includeSGST, setIncludeSGST] = useState(true);
-  const [paymentStatus, setPaymentStatus] = useState(editingOrder?.paymentStatus || 'Pending');
+  const [advancePayment, setAdvancePayment] = useState(editingOrder?.advancePayment || 0);
+  const [paymentStatus, setPaymentStatus] = useState(editingOrder?.paymentStatus || 'Unpaid');
+  const [showCustomerHistory, setShowCustomerHistory] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState(() => {
     if (editingOrder) return editingOrder.id;
     
@@ -51,7 +59,7 @@ const NewQuotation = () => {
     const lastSerial = parseInt(localStorage.getItem('lastInvoiceSerial') || '0');
     const nextSerial = lastSerial + 1;
     
-    return `#${nextSerial.toString().padStart(3, '0')}`;
+    return `INV-${nextSerial.toString().padStart(4, '0')}`;
   });
 
   // --- NEW FUNCTIONALITY START: Product List Search ---
@@ -80,18 +88,11 @@ const NewQuotation = () => {
       const reader = new FileReader();
       reader.onload = (event) => {
         setCompanyLogo(event.target.result);
-        localStorage.setItem('companyLogo', event.target.result);
+        // Don't store in localStorage - it exceeds quota for large images
       };
       reader.readAsDataURL(file);
     }
   };
-
-  useEffect(() => {
-    const savedLogo = localStorage.getItem('companyLogo');
-    if (savedLogo) {
-      setCompanyLogo(savedLogo);
-    }
-  }, []);
 
   const handleProductSelect = (lineId, productObj) => {
     setOrderLines(orderLines.map(line => 
@@ -106,6 +107,10 @@ const NewQuotation = () => {
 
   // Auto-save new products to localStorage
   const saveNewProduct = (productData) => {
+    // Validate productData has required properties
+    if (!productData || !productData.name || !productData.name.trim()) {
+      return null;
+    }
     const existingProducts = JSON.parse(localStorage.getItem('my_products') || '[]');
     const productExists = existingProducts.some(p => p.name.toLowerCase() === productData.name.toLowerCase());
     
@@ -163,6 +168,8 @@ const NewQuotation = () => {
       });
       setShowAddProductModal(false);
       setActiveSearchId(null);
+      
+      addChatMessage(`✅ New product "${savedProduct.name}" added successfully`);
     } else {
       alert('Product already exists!');
     }
@@ -179,19 +186,23 @@ const NewQuotation = () => {
     }
   };
 
-  
+  const getCustomerHistory = () => {
+    const allInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    return allInvoices.filter(q => q.customer.toLowerCase() === customer.toLowerCase());
+  };
 
   const handleWhatsAppShare = () => {
-    const message = `*${isConfirmed ? 'SALES ORDER' : 'QUOTATION'}*\n\n` +
-      `Order #: ${invoiceNumber}\n` +
+    const message = `*${isConfirmed ? 'INVOICE' : 'INVOICE'}*\n\n` +
+      `Invoice #: ${invoiceNumber}\n` +
       `Customer: ${customer}\n` +
-      `Total: ₹${(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}\n` +
+      `Total: ₹${(untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}\n` +
       `Payment Status: ${paymentStatus}\n\n` +
       `Thank you for your business!\n` +
       `- ${companyName || 'Smart Business Solutions'}`;
     
     const whatsappUrl = `https://wa.me/${customerPhone?.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
+    addChatMessage(`📱 WhatsApp message sent to ${customer}`);
   };
 
   const getPaymentStatusColor = (status) => {
@@ -204,10 +215,15 @@ const NewQuotation = () => {
   };
   // --- NEW FUNCTIONALITY END ---
 
-  const paymentTerms = ['Immediate Payment', '15 Days', '30 Days', '45 Days'];
-  const paymentMethods = ['Cash', 'Online', 'Card', 'UPI', 'Bank Transfer'];
+  const paymentTerms = ['Net 15', 'Net 30', 'Net 45', 'Due on Receipt'];
+  const paymentMethods = ['Bank Transfer', 'Cash', 'Card', 'UPI', 'Cheque'];
 
-  
+  // Show QR Scanner when Online payment is selected
+  useEffect(() => {
+    if (paymentMethod === 'Online' && isConfirmed) {
+      setShowQRScanner(true);
+    }
+  }, [paymentMethod, isConfirmed]);
 
   useEffect(() => {
     const handleClick = (e) => {
@@ -245,39 +261,65 @@ const NewQuotation = () => {
   const saveToSalesDashboard = () => {
     // Update serial number in localStorage when saving
     if (!isEditing) {
-      const currentSerial = parseInt(invoiceNumber.slice(1));
+      const currentSerial = parseInt(invoiceNumber.slice(4));
       localStorage.setItem('lastInvoiceSerial', currentSerial.toString());
     }
-    const quotationData = {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN');
+    const timeStr = now.toLocaleTimeString('en-IN');
+    const invoiceData = {
       id: editingOrderId || invoiceNumber,
-      date: editingOrder?.date || new Date().toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit', hour12: true }),
+      invoiceDate: invoiceDate,
+      dueDate: dueDate,
+      date: editingOrder?.date || `${dateStr} ${timeStr}`,
+      createdAt: editingOrder?.createdAt || now.toISOString(),
       customer,
       customerPhone,
       customerGST,
-      salesperson: editingOrder?.salesperson || 'Keshav',
+      customerEmail,
+      invoiceAddress,
+      deliveryAddress,
+      termsConditions,
+      bankDetails,
+      salesperson: editingOrder?.salesperson || 'Admin',
       total: totalAmount,
-      status: isConfirmed ? 'Sales Order' : 'Quotation',
+      status: isConfirmed ? 'Invoice' : 'Invoice',
       items: orderLines,
       paymentTerms: selectedTerm,
       paymentMethod,
-      expirationDate
+      paymentStatus,
+      dueDate,
+      advancePayment,
+      subtotal: untaxedAmount,
+      cgst: includeCGST ? (untaxedAmount * 0.09) : 0,
+      sgst: includeSGST ? (untaxedAmount * 0.09) : 0,
+      grandTotal: untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0))),
+      remainingAmount: Math.max(0, (untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment)
     };
     
-    const existingData = JSON.parse(localStorage.getItem('quotations') || '[]');
+    const existingData = JSON.parse(localStorage.getItem('invoices') || '[]');
     
     if (isEditing) {
       // Update existing record
       const updatedData = existingData.map(item => 
-        item.id === editingOrderId ? quotationData : item
+        item.id === editingOrderId ? invoiceData : item
       );
-      localStorage.setItem('quotations', JSON.stringify(updatedData));
+      localStorage.setItem('invoices', JSON.stringify(updatedData));
     } else {
       // Add new record
-      localStorage.setItem('quotations', JSON.stringify([quotationData, ...existingData]));
+      localStorage.setItem('invoices', JSON.stringify([invoiceData, ...existingData]));
     }
   };
 
-  
+  const addChatMessage = (text) => {
+    const newMsg = {
+      id: Date.now(),
+      user: 'Keshav',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      text
+    };
+    setChatHistory([newMsg, ...chatHistory]);
+  };
 
   const handleActionClick = (btnName) => {
     if (btnName === 'Edit') { setIsConfirmed(false); return; }
@@ -288,10 +330,14 @@ const NewQuotation = () => {
       if (!validateData()) return;
       saveToSalesDashboard();
       const printWindow = window.open('', '_blank');
+      if (!printWindow) {
+        alert('Popup blocked. Please allow pop-ups for this site to print.');
+        return;
+      }
       printWindow.document.write(`
         <html>
           <head>
-            <title>Print Quotation</title>
+            <title>Print Invoice</title>
             <style>
               body { font-family: 'Arial', sans-serif; margin: 0; padding: 40px; color: #333; }
               .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1F3A5F; padding-bottom: 20px; margin-bottom: 30px; }
@@ -330,8 +376,8 @@ const NewQuotation = () => {
                 <img src="${companyLogo}" alt="Company Logo" class="logo-img" />
               </div>
               <div class="company-info">
-                <h1 class="title">QUOTATION</h1>
-                <p class="subtitle">Quote #: ${invoiceNumber}</p>
+                <h1 class="title">INVOICE</h1>
+                <p class="subtitle">Invoice #: ${invoiceNumber}</p>
                 <p class="subtitle">Date: ${new Date().toLocaleDateString()}</p>
               </div>
             </div>
@@ -343,7 +389,7 @@ const NewQuotation = () => {
                 ${invoiceAddress ? `<p>${invoiceAddress.replace(/\n/g, '<br>')}</p>` : ''}
               </div>
               <div class="info-block">
-                <h4>Quote Details:</h4>
+                <h4>Invoice Details:</h4>
                 <p><strong>Expiration:</strong> ${expirationDate || 'Not specified'}</p>
                 <p><strong>Payment Terms:</strong> ${selectedTerm}</p>
                 <p><strong>Payment Method:</strong> ${paymentMethod}</p>
@@ -354,7 +400,7 @@ const NewQuotation = () => {
             <table>
               <thead>
                 <tr>
-                  <th style="width: 40%;">Product/Service/items</th>
+                  <th style="width: 40%;">Product/Service</th>
                   <th style="width: 10%; text-align: center;">Qty</th>
                   <th style="width: 15%; text-align: right;">Unit Price</th>
                   <th style="width: 10%; text-align: center;">Tax %</th>
@@ -367,7 +413,7 @@ const NewQuotation = () => {
                   <tr>
                     <td><strong>${line.product || 'Product'}</strong></td>
                     <td style="text-align: center;">${line.quantity}</td>
-                    <td style="text-align: right;">₹${line.unitPrice.toFixed(2)}</td>
+                    <td style="text-align: right;">₹${(Number(line.unitPrice) || 0).toFixed(2)}</td>
                     <td style="text-align: center;">${line.taxes}%</td>
                     <td style="text-align: center;">${line.discount}%</td>
                     <td style="text-align: right;">₹${calculateSubtotal(line).toFixed(2)}</td>
@@ -377,6 +423,14 @@ const NewQuotation = () => {
             </table>
             
             <div class="total-section">
+              <div class="total-row">
+                <div class="total-label">Gross Amount:</div>
+                <div class="total-amount">₹${grossAmount.toFixed(2)}</div>
+              </div>
+              <div class="total-row">
+                <div class="total-label">Total Discount:</div>
+                <div class="total-amount">-₹${totalDiscount.toFixed(2)}</div>
+              </div>
               <div class="total-row">
                 <div class="total-label">Subtotal:</div>
                 <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
@@ -395,12 +449,30 @@ const NewQuotation = () => {
               ` : ''}
               <div class="total-row grand-total">
                 <div class="total-label">Total:</div>
-                <div class="total-amount">₹${(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</div>
+                <div class="total-amount">₹${(untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</div>
               </div>
-              
+              ${advancePayment > 0 ? `
+                <div class="total-row" style="color: #28a745; font-weight: bold; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
+                  <div class="total-label">Advance Paid:</div>
+                  <div class="total-amount">₹${advancePayment.toFixed(2)}</div>
+                </div>
+                <div class="total-row" style="color: #dc3545; font-weight: bold;">
+                  <div class="total-label">Remaining Amount:</div>
+                  <div class="total-amount">₹${Math.max(0, (untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment).toFixed(2)}</div>
+                </div>
+              ` : ''}
             </div>
             
-            
+            <div class="terms-section">
+              <div class="terms-block">
+                <h4>Terms & Conditions</h4>
+                <p>${termsConditions}</p>
+              </div>
+              <div class="terms-block">
+                <h4>Bank Details</h4>
+                <p>${bankDetails}</p>
+              </div>
+            </div>
             
             <div class="signature-section">
               <div class="signature-box">
@@ -431,6 +503,7 @@ const NewQuotation = () => {
     if (btnName === 'Save') {
       if (!validateData()) return;
       saveToSalesDashboard();
+      addChatMessage(isEditing ? `${isConfirmed ? 'Invoice' : 'Draft Invoice'} updated for ${customer}` : `Invoice saved for ${customer}`);
       if (isEditing) {
         setTimeout(() => navigate('/sdashboardpage'), 1000);
       }
@@ -438,6 +511,7 @@ const NewQuotation = () => {
     
     if (btnName === 'Confirm') {
       setIsConfirmed(true);
+      addChatMessage(`Invoice confirmed for ${customer} → Invoice finalized.`);
     }
 
     if (btnName === 'Send') {
@@ -451,11 +525,12 @@ const NewQuotation = () => {
     setIsConfirmed(false);
     setCustomer('');
     setOrderLines([]);
+    setChatHistory([]); 
     setSelectedTerm('Immediate Payment');
     setShowCancelModal(false);
   };
 
-  const addLine = () => setOrderLines([...orderLines, { id: Date.now(), product: '', quantity: 1, unitPrice: 0, taxes: 0, discount: 0 }]);
+  const addLine = () => setOrderLines([...orderLines, { id: Date.now(), product: '', quantity: 0, unitPrice: 0, taxes: 0, discount: 0 }]);
   const updateLine = (id, field, value) => {
     setOrderLines(orderLines.map(line => {
       if (line.id === id) {
@@ -463,13 +538,7 @@ const NewQuotation = () => {
         
         // Auto-save product when both name and price are filled
         if (field === 'unitPrice' && updatedLine.product && parseFloat(value) > 0) {
-          // saveNewProduct expects a product object; pass name and price
-          try {
-            saveNewProduct({ name: updatedLine.product, price: String(parseFloat(value) || 0), cost: '', category: 'General', stock: '', description: '', image: '' });
-          } catch (e) {
-            // swallow any save errors to avoid disrupting price input
-            console.warn('saveNewProduct failed', e);
-          }
+          saveNewProduct({ name: updatedLine.product, price: parseFloat(value) });
         }
         
         return updatedLine;
@@ -481,15 +550,30 @@ const NewQuotation = () => {
   const handleFocus = (e) => { if (parseFloat(e.target.value) === 0) e.target.select(); };
 
   const calculateSubtotal = (line) => {
-    const base = line.quantity * line.unitPrice;
-    const afterDiscount = base - (base * line.discount / 100);
-    return afterDiscount + (afterDiscount * line.taxes / 100);
+    const qty = Number(line.quantity) || 0;
+    const price = Number(line.unitPrice) || 0;
+    const discount = Number(line.discount) || 0;
+    const taxes = Number(line.taxes) || 0;
+    const base = qty * price;
+    const afterDiscount = base - (base * (discount / 100));
+    return afterDiscount + (afterDiscount * (taxes / 100));
   };
 
-  const untaxedAmount = orderLines.reduce((acc, line) => {
-    const base = line.quantity * line.unitPrice;
-    return acc + (base - (base * line.discount / 100));
+  const grossAmount = orderLines.reduce((acc, line) => {
+    const qty = Number(line.quantity) || 0;
+    const price = Number(line.unitPrice) || 0;
+    return acc + (qty * price);
   }, 0);
+
+  const totalDiscount = orderLines.reduce((acc, line) => {
+    const qty = Number(line.quantity) || 0;
+    const price = Number(line.unitPrice) || 0;
+    const discount = Number(line.discount) || 0;
+    const base = qty * price;
+    return acc + (base * (discount / 100));
+  }, 0);
+
+  const untaxedAmount = grossAmount - totalDiscount;
 
   const totalAmount = orderLines.reduce((acc, line) => acc + calculateSubtotal(line), 0);
   const getBtnStyle = (isPrimary = false) => isPrimary ? "bg-[#1F3A5F] text-white px-3 py-1 rounded font-bold" : "bg-[#f8f9fa] border border-slate-300 text-slate-700 px-3 py-1 rounded font-medium hover:bg-slate-100";
@@ -630,7 +714,7 @@ const NewQuotation = () => {
                     <img src={companyLogo} alt="Company Logo" className="w-12 h-12 sm:w-16 sm:h-16 object-contain" />
                   </div>
                   <div className="text-left sm:text-right">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#1F3A5F] mb-1 sm:mb-2">{isConfirmed ? 'SALES ORDER' : 'QUOTATION'}</h2>
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-[#1F3A5F] mb-1 sm:mb-2">{isConfirmed ? 'SALES ORDER' : 'INVOICE'}</h2>
                     <p className="text-sm sm:text-base text-gray-600">#{invoiceNumber}</p>
                     <p className="text-sm sm:text-base text-gray-600">Date: {new Date().toLocaleDateString()}</p>
                   </div>
@@ -694,7 +778,7 @@ const NewQuotation = () => {
                             <tr key={line.id} className={index % 2 === 0 ? 'bg-gray-50' : 'bg-white'}>
                               <td className="p-3 font-medium">{line.product || 'Product'}</td>
                               <td className="p-3 text-center">{line.quantity}</td>
-                              <td className="p-3 text-right">₹{line.unitPrice.toFixed(2)}</td>
+                              <td className="p-3 text-right">₹{(Number(line.unitPrice) || 0).toFixed(2)}</td>
                               <td className="p-3 text-center">{line.taxes}%</td>
                               <td className="p-3 text-center">{line.discount}%</td>
                               <td className="p-3 text-right font-semibold">₹{calculateSubtotal(line).toFixed(2)}</td>
@@ -709,7 +793,15 @@ const NewQuotation = () => {
                 {/* Totals */}
                 <div className="flex justify-end mb-8">
                   <div className="w-80">
-                    <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600">Gross Amount:</span>
+                        <span className="font-semibold">₹{grossAmount.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between py-2">
+                        <span className="text-gray-600">Total Discount:</span>
+                        <span className="font-semibold">-₹{totalDiscount.toFixed(2)}</span>
+                      </div>
                       <div className="flex justify-between py-2">
                         <span className="text-gray-600">Subtotal:</span>
                         <span className="font-semibold">₹{untaxedAmount.toFixed(2)}</span>
@@ -729,15 +821,40 @@ const NewQuotation = () => {
                       <div className="border-t-2 border-[#1F3A5F] pt-3 mt-3">
                         <div className="flex justify-between">
                           <span className="text-xl font-bold text-[#1F3A5F]">Grand Total:</span>
-                          <span className="text-xl font-bold text-[#1F3A5F]">₹{(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
+                          <span className="text-xl font-bold text-[#1F3A5F]">₹{(untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
                         </div>
-                        
+                        {advancePayment > 0 && (
+                          <>
+                            <div className="flex justify-between mt-2 pt-2 border-t border-gray-300">
+                              <span className="text-lg font-bold text-green-600">Advance Paid:</span>
+                              <span className="text-lg font-bold text-green-600">₹{advancePayment.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between mt-1">
+                              <span className="text-lg font-bold text-orange-600">Remaining Amount:</span>
+                              <span className="text-lg font-bold text-orange-600">₹{Math.max(0, (untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment).toFixed(2)}</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                
+                {/* Terms & Bank Details */}
+                <div className="grid grid-cols-2 gap-8 mb-8">
+                  <div>
+                    <h4 className="font-bold text-[#714B67] text-sm uppercase mb-3">Terms & Conditions</h4>
+                    <div className="bg-gray-50 p-4 rounded text-xs leading-relaxed whitespace-pre-line">
+                      {termsConditions}
+                    </div>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-[#714B67] text-sm uppercase mb-3">Bank Details</h4>
+                    <div className="bg-gray-50 p-4 rounded text-xs leading-relaxed whitespace-pre-line">
+                      {bankDetails}
+                    </div>
+                  </div>
+                </div>
 
                 {/* Signatures */}
                 <div className="flex justify-between items-end pt-8">
@@ -765,7 +882,7 @@ const NewQuotation = () => {
             <div className="bg-white border-t p-2 sm:p-4 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0">
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                 <span className={`w-2 h-2 sm:w-3 sm:h-3 rounded-full ${isConfirmed ? 'bg-green-500' : 'bg-blue-500'}`}></span>
-                Status: {isConfirmed ? 'Confirmed Sales Order' : 'Draft Quotation'}
+                Status: {isConfirmed ? 'Confirmed Sales Order' : 'Draft Invoice'}
               </div>
               <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
                 <button 
@@ -794,7 +911,7 @@ const NewQuotation = () => {
         <div className="fixed inset-0 bg-slate-900/40 z-[200] flex items-center justify-center p-4">
           <div className="bg-white rounded shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
             <div className="p-4 border-b flex justify-between items-center">
-              <h3 className="font-bold text-lg">Send Quotation</h3>
+              <h3 className="font-bold text-lg">Send Invoice</h3>
               <XMarkIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowDocumentModal(false)} />
             </div>
             <div className="p-6 overflow-y-auto max-h-[70vh]">
@@ -809,18 +926,18 @@ const NewQuotation = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Subject:</label>
-                      <input type="text" value={`Quotation ${invoiceNumber} - ${customer}`} className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
+                      <input type="text" value={`Invoice ${invoiceNumber} - ${customer}`} readOnly className="w-full border border-slate-300 rounded px-3 py-2 text-sm" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Message:</label>
-                      <textarea className="w-full h-32 border border-slate-300 rounded px-3 py-2 text-sm" defaultValue={`Dear ${customer},\n\nPlease find your quotation ${invoiceNumber} attached.\n\nTotal Amount: ₹${(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}\n\nThank you for your business.\n\nBest regards`} />
+                      <textarea className="w-full h-32 border border-slate-300 rounded px-3 py-2 text-sm" defaultValue={`Dear ${customer},\n\nPlease find your invoice ${invoiceNumber} attached.\n\nTotal Amount: ₹${(untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}\n\nThank you for your business.\n\nBest regards`} />
                     </div>
                   </div>
                 </div>
                 
-                {/* Quotation Preview with Logo */}
+                {/* Invoice Preview with Logo */}
                 <div>
-                  <h4 className="font-bold mb-4 text-slate-800">Quotation Preview</h4>
+                  <h4 className="font-bold mb-4 text-slate-800">Invoice Preview</h4>
                   <div className="bg-white border rounded-lg p-4 max-h-96 overflow-y-auto">
                     {/* Header with Logo */}
                     <div className="flex justify-between items-center mb-4 pb-3 border-b">
@@ -828,7 +945,7 @@ const NewQuotation = () => {
                         <img src={companyLogo} alt="Logo" className="h-12 w-auto" />
                       </div>
                       <div className="text-right">
-                        <h2 className="text-lg font-bold text-[#714B67]">QUOTATION</h2>
+                        <h2 className="text-lg font-bold text-[#714B67]">INVOICE</h2>
                         <p className="text-sm text-gray-600">{invoiceNumber}</p>
                         <p className="text-sm text-gray-600">{new Date().toLocaleDateString()}</p>
                       </div>
@@ -877,7 +994,7 @@ const NewQuotation = () => {
                       )}
                       <div className="flex justify-between font-bold text-lg border-t pt-2">
                         <span>Total:</span>
-                        <span>₹{(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
+                        <span>₹{(untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
@@ -892,6 +1009,7 @@ const NewQuotation = () => {
                   return;
                 }
                 saveToSalesDashboard();
+                addChatMessage(`📧 Invoice ${invoiceNumber} sent successfully to ${customerEmail}`);
                 setShowDocumentModal(false);
                 alert(`Email sent successfully to ${customerEmail}!`);
               }} className="bg-[#714B67] text-white px-4 py-2 rounded font-bold">Send Email</button>
@@ -918,7 +1036,58 @@ const NewQuotation = () => {
         </div>
       )}
 
-      
+      {/* QR Scanner Modal */}
+      {showQRScanner && (
+        <div className="fixed inset-0 bg-black/60 z-[250] flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
+            <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-t-xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-2xl">💳</span>
+                  <div>
+                    <h3 className="font-bold text-lg">Online Payment</h3>
+                    <p className="text-white/80 text-sm">Scan QR to Pay</p>
+                  </div>
+                </div>
+                <button onClick={() => setShowQRScanner(false)} className="text-white/80 hover:text-white">
+                  <XMarkIcon className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6 text-center">
+              <div className="bg-white border-4 border-gray-200 rounded-lg p-4 mb-4 inline-block">
+                <div className="w-48 h-48 bg-gray-100 rounded flex items-center justify-center">
+                  <div className="grid grid-cols-8 gap-1 w-40 h-40">
+                    {Array.from({length: 64}, (_, i) => (
+                      <div key={i} className={`w-full h-full ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                <div className="flex justify-between mb-2">
+                  <span>Amount:</span>
+                  <span className="font-bold text-xl text-green-600">₹{(untaxedAmount + (untaxedAmount * 0.18)).toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>UPI ID:</span>
+                  <span className="font-mono text-sm">{upiId}</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-3">
+                <button onClick={() => setShowQRScanner(false)} className="flex-1 bg-gray-500 text-white py-2 rounded">Close</button>
+                <button onClick={() => {
+                  addChatMessage(`💳 Payment completed for ₹${(untaxedAmount + (untaxedAmount * 0.18)).toFixed(2)}`);
+                  setShowQRScanner(false);
+                }} className="flex-1 bg-green-500 text-white py-2 rounded">Payment Done</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {showError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 bg-red-600 text-white px-6 py-2 rounded">
@@ -957,13 +1126,13 @@ const NewQuotation = () => {
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-slate-900">
               {isEditing ? 
-                (isConfirmed ? `Sales Order - ${editingOrderId}` : `Edit Quotation - ${editingOrderId}`) : 
-                (isConfirmed ? 'S00071' : 'New Quotation')
+                (isConfirmed ? `Invoice - ${editingOrderId}` : `Edit Draft Invoice - ${editingOrderId}`) : 
+                (isConfirmed ? 'New Invoice' : 'New Invoice')
               }
             </h1>
             <div className="flex items-center gap-3">
-              <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${isConfirmed ? 'bg-green-500' : 'bg-blue-500'}`}>
-                {isConfirmed ? 'CONFIRMED' : 'DRAFT'}
+              <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${isConfirmed ? 'bg-green-500' : 'bg-orange-500'}`}>
+                {isConfirmed ? 'FINALIZED' : 'DRAFT'}
               </span>
               <span className="text-sm text-slate-500">#{invoiceNumber}</span>
             </div>
@@ -976,6 +1145,12 @@ const NewQuotation = () => {
                 {isConfirmed ? (
                   <div className="sm:col-span-2 flex items-center gap-2">
                     <span className="py-2 text-sm sm:text-base text-teal-700 font-medium">{customer}</span>
+                    <button 
+                      onClick={() => setShowCustomerHistory(true)}
+                      className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200"
+                    >
+                      History
+                    </button>
                   </div>
                 ) : (
                   <input type="text" placeholder="Type customer name..." value={customer} onChange={(e) => setCustomer(e.target.value)} className={`sm:col-span-2 border-b outline-none py-2 text-sm sm:text-base text-teal-700 ${showError ? 'border-red-500 bg-red-50' : 'border-teal-500/30'}`} />
@@ -1052,8 +1227,8 @@ const NewQuotation = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center">
-                <label className="text-sm sm:text-base font-bold">Expiration</label>
-                <input disabled={isConfirmed} type="date" value={expirationDate} onChange={(e) => setExpirationDate(e.target.value)} className="sm:col-span-2 border-b border-slate-200 outline-none py-2 text-sm sm:text-base" />
+                <label className="text-sm sm:text-base font-bold">Due Date</label>
+                <input disabled={isConfirmed} type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} className="sm:col-span-2 border-b border-slate-200 outline-none py-2 text-sm sm:text-base" />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-center relative">
                 <label className="text-sm sm:text-base font-bold">Payment Terms</label>
@@ -1196,6 +1371,10 @@ const NewQuotation = () => {
                   <span className="text-slate-700">₹ {untaxedAmount.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-xs sm:text-sm">
+                  <span className="text-slate-500">Total Discount:</span>
+                  <span className="text-slate-700">-₹ {totalDiscount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between items-center text-xs sm:text-sm">
                   <div className="flex items-center gap-2">
                     <input type="checkbox" checked={includeCGST} onChange={(e) => setIncludeCGST(e.target.checked)} disabled={isConfirmed} className="w-3 h-3" />
                     <span className="text-slate-500">CGST (9%):</span>
@@ -1209,16 +1388,53 @@ const NewQuotation = () => {
                   </div>
                   <span className="text-slate-700">₹ {includeSGST ? (untaxedAmount * 0.09).toFixed(2) : '0.00'}</span>
                 </div>
-                  <div className="border-t border-slate-200 pt-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-600 font-medium text-sm sm:text-base">Total:</span>
-                      <span className="font-bold text-slate-900 text-base sm:text-lg">₹ {(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
-                    </div>
+                <div className="flex justify-between items-center text-xs sm:text-sm">
+                  <span className="text-slate-500">Advance Payment:</span>
+                  <input 
+                    disabled={isConfirmed} 
+                    type="number" 
+                    value={advancePayment} 
+                    onChange={(e) => setAdvancePayment(parseFloat(e.target.value) || 0)} 
+                    className="w-20 sm:w-24 text-right outline-none border-b border-slate-200 py-1 text-xs sm:text-sm" 
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="border-t border-slate-200 pt-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-600 font-medium text-sm sm:text-base">Total:</span>
+                    <span className="font-bold text-slate-900 text-base sm:text-lg">₹ {(untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</span>
                   </div>
+                  <div className="flex justify-between items-center text-xs sm:text-sm text-orange-600">
+                    <span className="font-medium">Remaining Amount:</span>
+                    <span className="font-bold">₹ {Math.max(0, (untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment).toFixed(2)}</span>
+                  </div>
+                </div>
               </div>
             </div>
             
-            
+            {/* Terms & Conditions */}
+            <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-bold text-slate-700 mb-3">Terms & Conditions</h3>
+                <textarea 
+                  disabled={isConfirmed} 
+                  value={termsConditions} 
+                  onChange={(e) => setTermsConditions(e.target.value)} 
+                  className="w-full h-24 border border-slate-200 rounded p-3 text-xs resize-none"
+                  placeholder="Enter terms and conditions..."
+                />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-700 mb-3">Bank Details</h3>
+                <textarea 
+                  disabled={isConfirmed} 
+                  value={bankDetails} 
+                  onChange={(e) => setBankDetails(e.target.value)} 
+                  className="w-full h-24 border border-slate-200 rounded p-3 text-xs resize-none"
+                  placeholder="Enter bank details..."
+                />
+              </div>
+            </div>
             
             {/* Signature Section */}
             {showSignature && (
@@ -1237,18 +1453,84 @@ const NewQuotation = () => {
         </main>
 
         <aside className="w-full lg:w-[380px] bg-white border-l lg:border-l border-t lg:border-t-0 flex flex-col">
-          <div className="p-4 border-b">
-            <h4 className="font-bold text-sm">Quotation Panel</h4>
+          <div className="p-2 border-b">
+            <button className="bg-[#714B67] text-white px-3 py-1 rounded font-bold text-[10px] sm:text-[11px]">Send message</button>
           </div>
-          <div className="p-4 text-sm text-slate-600">
-            <p>Chat/history and customer history removed for a minimal quotation UI.</p>
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-4 sm:space-y-6 max-h-64 lg:max-h-none">
+            {chatHistory.length === 0 ? (
+              <div className="italic text-slate-400 text-[10px] sm:text-[11px]">
+                {isEditing ? `Editing ${editingOrder.status.toLowerCase()}...` : 'Creating a new record...'}
+              </div>
+            ) : (
+              chatHistory.map((msg) => (
+                <div key={msg.id} className="flex gap-2 sm:gap-3">
+                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-xs sm:text-sm">{msg.user[0]}</div>
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-slate-800 text-xs sm:text-sm">{msg.user}</span>
+                      <span className="text-[9px] sm:text-[10px] text-slate-400">{msg.time}</span>
+                    </div>
+                    <p className="text-[10px] sm:text-[12px] text-slate-600 mt-0.5">{msg.text}</p>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </aside>
       </div>
 
-      
+      {/* Customer History Modal */}
+      {showCustomerHistory && (
+        <div className="fixed inset-0 bg-slate-900/40 z-[200] flex items-center justify-center p-4">
+          <div className="bg-white rounded shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="font-bold text-lg">Customer History - {customer}</h3>
+              <XMarkIcon className="w-5 h-5 cursor-pointer" onClick={() => setShowCustomerHistory(false)} />
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[70vh]">
+              {getCustomerHistory().length > 0 ? (
+                <div className="space-y-4">
+                  {getCustomerHistory().map((order, index) => (
+                    <div key={index} className="border rounded-lg p-4 hover:bg-slate-50">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-bold text-slate-900">{order.id}</h4>
+                          <p className="text-sm text-slate-600">{order.date}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-blue-600">₹{(Number(order.total) || 0).toFixed(2)}</p>
+                          <span className={`px-2 py-1 rounded-full text-xs font-bold text-white ${order.paymentStatus === 'Paid' ? 'bg-green-500' : order.paymentStatus === 'Overdue' ? 'bg-red-500' : 'bg-yellow-500'}`}>
+                            {order.paymentStatus || 'Pending'}
+                          </span>
+                        </div>
+                      </div>
+                      {order.items && order.items.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-sm font-medium text-slate-700 mb-1">Items:</p>
+                          <div className="text-xs text-slate-600">
+                            {order.items.map((item, i) => (
+                              <span key={i}>{item.product} (x{item.quantity}){i < order.items.length - 1 ? ', ' : ''}</span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-slate-400">
+                  <p>No previous orders found for this customer</p>
+                </div>
+              )}
+            </div>
+            <div className="p-4 bg-slate-50 border-t flex justify-end">
+              <button onClick={() => setShowCustomerHistory(false)} className="bg-white border px-4 py-2 rounded">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default NewQuotation;  
+export default NewInvoice;  

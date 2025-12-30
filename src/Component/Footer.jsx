@@ -12,7 +12,7 @@ const SocialIcon = ({ children }) => (
 const Footer = () => {
     return (
         // The background color is a very dark gray/near-black, border matches the purple-main accent
-        <footer className="bg-green-100 text-indigo-900 pt-6 border-t-2 "> 
+        <footer className="bg-green-100 text-indigo-900 pt-6 border-t-0 "> 
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
                 
                 {/* Odoo Logo (Centered) */}

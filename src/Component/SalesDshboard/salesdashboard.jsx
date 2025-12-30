@@ -36,9 +36,22 @@ const SalesDashboard = () => {
   };
 
   const deleteQuotation = (id) => {
+    const itemToDelete = quotations.find(q => q.id === id);
     const updatedQuotations = quotations.filter(q => q.id !== id);
     setQuotations(updatedQuotations);
-    localStorage.setItem('quotations', JSON.stringify(updatedQuotations));
+    
+    // Delete from appropriate storage based on status
+    if (itemToDelete?.status === 'Invoice' || itemToDelete?.status === 'Draft Invoice') {
+      // It's an invoice, delete from invoices storage
+      const savedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+      const updatedInvoices = savedInvoices.filter(q => q.id !== id);
+      localStorage.setItem('invoices', JSON.stringify(updatedInvoices));
+    } else {
+      // It's a quotation, delete from quotations storage
+      const savedQuotations = JSON.parse(localStorage.getItem('quotations') || '[]');
+      const updatedQuotations = savedQuotations.filter(q => q.id !== id);
+      localStorage.setItem('quotations', JSON.stringify(updatedQuotations));
+    }
   };
 
   const printQuotation = (q) => {
@@ -114,7 +127,7 @@ const SalesDashboard = () => {
             <table>
               <thead>
                 <tr>
-                  <th style="width: 40%;">Product/Service</th>
+                  <th style="width: 40%;">Product/Service/items</th>
                   <th style="width: 10%; text-align: center;">Qty</th>
                   <th style="width: 15%; text-align: right;">Unit Price</th>
                   <th style="width: 10%; text-align: center;">Tax %</th>
@@ -208,7 +221,10 @@ const SalesDashboard = () => {
 
   useEffect(() => {
     const savedQuotations = JSON.parse(localStorage.getItem('quotations') || '[]');
-    setQuotations(savedQuotations);
+    const savedInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    // Merge invoices first so recent invoices appear at top of the dashboard
+    const combined = [...savedInvoices, ...savedQuotations];
+    setQuotations(combined);
   }, []);
 
   // Updated Filter logic to handle name and ID simultaneously
@@ -226,7 +242,7 @@ const SalesDashboard = () => {
     <div className="flex flex-col h-screen bg-white font-sans text-[13px] text-slate-700 overflow-hidden">
       
       {/* --- MAIN NAVBAR --- */}
-      <nav className="bg-[#714B67] text-white flex items-center justify-between px-2 md:px-4 h-10 shrink-0 relative z-[60]">
+      <nav className="bg-[#1F3A5F] text-white flex items-center justify-between px-2 md:px-4 h-10 shrink-0 relative z-[60]">
         <div className="flex items-center h-full">
           <div className="p-2 hover:bg-black/10 cursor-pointer mr-1 md:mr-2">
             <div className="grid grid-cols-3 gap-0.5 w-4">
@@ -373,13 +389,20 @@ const SalesDashboard = () => {
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button 
             onClick={() => navigate('/snewpage')}
-            className="bg-[#714B67] text-white px-4 py-1.5 rounded font-bold text-[14px] hover:bg-[#5a3c52] transition-colors"
+            className="bg-[#1F3A5F] text-white px-4 py-1.5 rounded font-bold text-[14px] hover:bg-[#162A43] transition-colors"
           >
-            New
+            New Quotation
+          </button>
+          
+          <button 
+            onClick={() => navigate('/invoice')}
+            className="bg-[#1F3A5F] text-white px-4 py-1.5 rounded font-bold text-[14px] hover:bg-[#162A43] transition-colors"
+          >
+            New Invoice
           </button>
           
           <div className="flex items-center gap-1 text-[18px] md:text-[20px] text-slate-600">
-            <span className="font-medium">Quotations</span>
+            <span className="font-medium">Quotations / Invoices</span>
             <Cog6ToothIcon className="w-4 h-4 text-slate-400 cursor-pointer" />
           </div>
         </div>
@@ -425,10 +448,10 @@ const SalesDashboard = () => {
                   <tr 
                     key={`${q.id}-${index}`} 
                     className="hover:bg-slate-50 cursor-pointer border-b group transition-colors text-[14px]"
-                    onClick={() => {
-                      setSelectedQuotation(q);
-                      setShowModal(true);
-                    }}
+                      onClick={() => {
+                        setSelectedQuotation(q);
+                        setShowModal(true);
+                      }}
                   >
                     <td className="py-3 px-2 border-b border-slate-100" onClick={(e) => e.stopPropagation()}>
                       <input type="checkbox" className="rounded border-gray-300" />
@@ -486,7 +509,7 @@ const SalesDashboard = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[70] p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b">
-              <h2 className="text-xl font-bold text-slate-900">Quotation Details</h2>
+              <h2 className="text-xl font-bold text-slate-900">Details</h2>
               <button 
                 onClick={() => setShowModal(false)}
                 className="text-slate-400 hover:text-slate-600"

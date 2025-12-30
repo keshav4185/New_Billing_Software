@@ -2,14 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { CheckCircleIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'; // Requires: npm install @heroicons/react
 
 const APPS = [
-  { id: 'crm', name: 'CRM', icon: '💎', color: 'text-teal-500' },
+  
   { id: 'sales', name: 'Sales', icon: '📊', color: 'text-orange-500' },
-  { id: 'pos', name: 'Point of Sale', icon: '🏪', color: 'text-purple-500' },
-  { id: 'rest', name: 'Restaurant', icon: '🍽️', color: 'text-red-500' },
-  { id: 'sub', name: 'Subscriptions', icon: '🔄', color: 'text-cyan-500' },
-  { id: 'rent', name: 'Rental', icon: '🔑', color: 'text-blue-500' },
-  { id: 'inv', name: 'Inventory', icon: '📦', color: 'text-yellow-600' },
-  { id: 'acc', name: 'Accounting', icon: '🏦', color: 'text-emerald-500' },
+  // { id: 'pos', name: 'Point of Sale', icon: '🏪', color: 'text-purple-500' },
+  // { id: 'rest', name: 'Restaurant', icon: '🍽️', color: 'text-red-500' },
+  // { id: 'sub', name: 'Subscriptions', icon: '🔄', color: 'text-cyan-500' },
+  // { id: 'rent', name: 'Rental', icon: '🔑', color: 'text-blue-500' },
+  // { id: 'inv', name: 'Inventory', icon: '📦', color: 'text-yellow-600' },
+  // { id: 'acc', name: 'Accounting', icon: '🏦', color: 'text-emerald-500' },
 ];
 
 const Tryhome = () => {

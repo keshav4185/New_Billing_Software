@@ -24,6 +24,8 @@ import ProductFormnew from './Pages/Productpage/productfrompage';
 import Toinvoicepage from './Pages/Invoicepage/Toinvoicepage';
 import Myaccountpage from './Pages/Mypage/myaccountpage';
 import Salespage from './Pages/Reportingpage/salespage';
+import Snewinvoice from './Pages/SDashboard/snewinvoice';
+
 
 // Layout component with navbar and footer
 const LayoutWithNavbar = ({ children }) => (
@@ -52,8 +54,7 @@ function App() {
         <Route path="/tryapppage" element={<LayoutWithNavbar><Tryapppage /></LayoutWithNavbar>} />
         <Route path="/myaccountpage" element={<LayoutWithNavbar><Myaccountpage /></LayoutWithNavbar>} />
       <Route path="/salespage" element={<Salespage />} />
-
-
+ 
         {/* Dashboard routes without navbar and footer */}
         <Route path="/sdashboardpage" element={<Sdashboardpage />} />
         <Route path="/snewpage" element={<Snewpage />} />
@@ -63,6 +64,8 @@ function App() {
         <Route path="/productpage" element={<Productpage />} />
         <Route path="/productform" element={<ProductFormnew />}/>
         <Route path="/toinvoicepage" element={<Toinvoicepage />} />
+        <Route path="/invoice" element={<Snewinvoice />} />
+        
       </Routes>
     </BrowserRouter>
   );

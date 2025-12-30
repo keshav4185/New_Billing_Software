@@ -49,7 +49,7 @@ const ProductFormnew = () => {
     <div className="flex flex-col h-screen bg-white font-sans text-[13px]">
       <div className="flex items-center justify-between px-4 py-2 border-b">
         <div className="flex items-center gap-3">
-          <button onClick={handleSave} className="bg-[#714B67] text-white px-4 py-1 rounded font-bold hover:bg-[#5a3c52]">Save</button>
+          <button onClick={handleSave} className="bg-[#1F3A5F] text-white px-4 py-1 rounded font-bold hover:bg-[#162A43]">Save</button>
           <button onClick={() => navigate(-1)} className="border px-4 py-1 rounded">Discard</button>
           <span className="ml-4 text-[18px] font-medium text-slate-700">Products / <span className="text-slate-400">New</span></span>
         </div>
