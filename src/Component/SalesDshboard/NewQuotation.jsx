@@ -279,6 +279,21 @@ const NewQuotation = () => {
 
   
 
+// Place this helper function at the top of your component file
+  const numberToWords = (num) => {
+    const a = ['', 'One ', 'Two ', 'Three ', 'Four ', 'Five ', 'Six ', 'Seven ', 'Eight ', 'Nine ', 'Ten ', 'Eleven ', 'Twelve ', 'Thirteen ', 'Fourteen ', 'Fifteen ', 'Sixteen ', 'Seventeen ', 'Eighteen ', 'Nineteen '];
+    const b = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    const format = (n) => {
+      if (n < 20) return a[n];
+      if (n < 100) return b[Math.floor(n / 10)] + (n % 10 !== 0 ? ' ' + a[n % 10] : '');
+      if (n < 1000) return a[Math.floor(n / 100)] + ' Hundred ' + (n % 100 !== 0 ? format(n % 100) : '');
+      if (n < 100000) return format(Math.floor(n / 1000)) + ' Thousand ' + (n % 100 !== 0 ? format(n % 100) : '');
+      if (n < 10000000) return format(Math.floor(n / 100000)) + ' Lakh ' + (n % 100000 !== 0 ? format(n % 100000) : '');
+      return '';
+    };
+    return num > 0 ? format(Math.floor(num)) + 'Rupees Only' : 'Zero Rupees Only';
+  };
+
   const handleActionClick = (btnName) => {
     if (btnName === 'Edit') { setIsConfirmed(false); return; }
     if (btnName === 'Cancel') { setShowCancelModal(true); return; }
@@ -287,144 +302,183 @@ const NewQuotation = () => {
     if (btnName === 'Print') {
       if (!validateData()) return;
       saveToSalesDashboard();
+      
       const printWindow = window.open('', '_blank');
+      const cgst = includeCGST ? (untaxedAmount * 0.09) : 0;
+      const sgst = includeSGST ? (untaxedAmount * 0.09) : 0;
+      const finalGrandTotal = totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)));
+      
+      const now = new Date();
+      const formattedDate = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+      const formattedTime = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
       printWindow.document.write(`
         <html>
           <head>
-            <title>Print Quotation</title>
+            <title>Tax Invoice - ${invoiceNumber}</title>
             <style>
-              body { font-family: 'Arial', sans-serif; margin: 0; padding: 40px; color: #333; }
-              .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #1F3A5F; padding-bottom: 20px; margin-bottom: 30px; }
-              .logo-section { display: flex; align-items: center; gap: 15px; }
-              .logo-img { height: 60px; width: auto; }
-              .logo-text { font-size: 28px; font-weight: bold; color: #1F3A5F; }
-              .company-info { text-align: right; }
-              @media print { .logo-img { height: 50px; } }
-              @media screen and (max-width: 768px) { .logo-img { height: 40px; } .logo-text { font-size: 20px; } }
-              .title { font-size: 32px; font-weight: bold; color: #1F3A5F; margin: 0; }
-              .subtitle { color: #666; margin: 5px 0 0 0; }
-              .info-section { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin: 30px 0; }
-              .info-block h4 { color: #1F3A5F; font-size: 14px; margin: 0 0 10px 0; text-transform: uppercase; }
-              .info-block p { margin: 5px 0; line-height: 1.4; }
-              table { width: 100%; border-collapse: collapse; margin: 30px 0; }
-              th { background: #f8f9fa; padding: 12px; text-align: left; border: 1px solid #ddd; font-weight: bold; color: #1F3A5F; }
-              td { padding: 12px; border: 1px solid #ddd; }
-              .total-section { text-align: right; margin-top: 30px; }
-              .total-row { display: flex; justify-content: flex-end; margin: 5px 0; }
-              .total-label { width: 150px; text-align: right; padding-right: 20px; }
-              .total-amount { font-weight: bold; width: 100px; }
-              .grand-total { font-size: 18px; color: #1F3A5F; border-top: 2px solid #1F3A5F; padding-top: 10px; margin-top: 10px; }
-              .footer { margin-top: 50px; text-align: center; color: #666; font-size: 12px; border-top: 1px solid #ddd; padding-top: 20px; }
-              .terms-section { margin-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-              .terms-block h4 { color: #1F3A5F; font-size: 14px; margin: 0 0 10px 0; }
-              .terms-block p { font-size: 12px; line-height: 1.4; margin: 0; white-space: pre-line; }
-              .signature-section { margin-top: 40px; display: flex; justify-content: space-between; }
-              .signature-box { text-align: center; width: 200px; }
-              .signature-line { border-bottom: 1px solid #333; height: 40px; margin-bottom: 5px; }
-              @media print { body { margin: 0; } }
+              @page { size: A4; margin: 10mm; }
+              body { 
+                font-family: 'Segoe UI', Tahoma, sans-serif; 
+                color: #000; 
+                margin: 0; 
+                padding: 0; 
+                font-size: 9.5pt; 
+                line-height: 1.4; 
+              }
+              
+              .main-container { border: 1.5pt solid #000; padding: 0; }
+              .section { border-bottom: 1pt solid #000; padding: 10px; }
+              
+              .header-grid { display: grid; grid-template-columns: 1.4fr 1fr; }
+              .company-brand { border-right: 1pt solid #000; padding: 10px; }
+              .invoice-title-area { padding: 10px; text-align: center; background: #f9f9f9; }
+              
+              .company-name { font-size: 15pt; font-weight: 800; color: #1F3A5F; text-transform: uppercase; margin: 0; }
+              .doc-heading { font-size: 14pt; font-weight: 900; margin: 0; text-decoration: underline; letter-spacing: 1px; }
+              
+              .address-grid { display: grid; grid-template-columns: 1fr 1fr; min-height: 130px; }
+              .address-box { padding: 8px; font-size: 9pt; }
+              .address-box:first-child { border-right: 1pt solid #000; }
+              .box-label { font-size: 8pt; font-weight: bold; text-transform: uppercase; display: block; margin-bottom: 5px; color: #333; border-bottom: 0.5pt solid #ccc; }
+              .highlight-text { font-size: 11pt; font-weight: 700; display: block; margin-bottom: 2px; color: #000; }
+
+              table.items-table { width: 100%; border-collapse: collapse; margin: 0; }
+              table.items-table th { background: #f2f2f2; border-bottom: 1pt solid #000; border-right: 0.5pt solid #000; padding: 8px; font-size: 8.5pt; text-transform: uppercase; }
+              table.items-table td { border-right: 0.5pt solid #000; padding: 6px 8px; font-size: 9.5pt; vertical-align: top; }
+              .last-col { border-right: none !important; }
+
+              .bottom-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; border-top: 1pt solid #000; }
+              .words-area { padding: 10px; border-right: 1pt solid #000; font-size: 9pt; }
+              .totals-area { padding: 0; }
+              .total-row { display: flex; justify-content: space-between; padding: 5px 10px; border-bottom: 0.5pt solid #eee; }
+              .grand-total { background: #1F3A5F; color: #fff; font-weight: bold; font-size: 12pt; padding: 8px 10px !important; }
+
+              /* Professional Terms Section */
+              .terms-section { padding: 12px; border-top: 1pt solid #000; font-size: 9.5pt; background: #fff; }
+              .terms-heading { font-size: 10pt; font-weight: bold; text-decoration: underline; margin-bottom: 5px; display: block; text-transform: uppercase; }
+              .terms-text { line-height: 1.5; color: #000; font-weight: 500; }
+
+              .sig-grid { display: grid; grid-template-columns: 1fr 1fr; text-align: center; border-top: 1pt solid #000; }
+              .sig-box { padding: 40px 10px 10px 10px; font-size: 9pt; }
+              .sig-box:first-child { border-right: 1pt solid #000; }
             </style>
           </head>
           <body>
-            <div class="header">
-              <div class="logo-section">
-                <img src="${companyLogo}" alt="Company Logo" class="logo-img" />
-              </div>
-              <div class="company-info">
-                <h1 class="title">QUOTATION</h1>
-                <p class="subtitle">Quote #: ${invoiceNumber}</p>
-                <p class="subtitle">Date: ${new Date().toLocaleDateString()}</p>
-              </div>
-            </div>
-            
-            <div class="info-section">
-              <div class="info-block">
-                <h4>Bill To:</h4>
-                <p><strong>${customer}</strong></p>
-                ${invoiceAddress ? `<p>${invoiceAddress.replace(/\n/g, '<br>')}</p>` : ''}
-              </div>
-              <div class="info-block">
-                <h4>Quote Details:</h4>
-                <p><strong>Expiration:</strong> ${expirationDate || 'Not specified'}</p>
-                <p><strong>Payment Terms:</strong> ${selectedTerm}</p>
-                <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-                ${deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${deliveryAddress.replace(/\n/g, '<br>')}</p>` : ''}
-              </div>
-            </div>
-            
-            <table>
-              <thead>
-                <tr>
-                  <th style="width: 40%;">Product/Service/items</th>
-                  <th style="width: 10%; text-align: center;">Qty</th>
-                  <th style="width: 15%; text-align: right;">Unit Price</th>
-                  <th style="width: 10%; text-align: center;">Tax %</th>
-                  <th style="width: 10%; text-align: center;">Disc %</th>
-                  <th style="width: 15%; text-align: right;">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${orderLines.map(line => `
-                  <tr>
-                    <td><strong>${line.product || 'Product'}</strong></td>
-                    <td style="text-align: center;">${line.quantity}</td>
-                    <td style="text-align: right;">₹${line.unitPrice.toFixed(2)}</td>
-                    <td style="text-align: center;">${line.taxes}%</td>
-                    <td style="text-align: center;">${line.discount}%</td>
-                    <td style="text-align: right;">₹${calculateSubtotal(line).toFixed(2)}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-            
-            <div class="total-section">
-              <div class="total-row">
-                <div class="total-label">Subtotal:</div>
-                <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
-              </div>
-              ${includeCGST ? `
-                <div class="total-row">
-                  <div class="total-label">CGST (9%):</div>
-                  <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
+            <div class="main-container">
+              <div class="header-grid section">
+                <div class="company-brand">
+                   <img src="${companyLogo}" style="height: 45px; margin-bottom: 5px;" />
+                   <div class="company-name">${companyName || 'Smart Business Solutions'}</div>
+                   <div style="font-size: 8.5pt;">${companyAddress}</div>
+                   <div style="font-size: 8.5pt;"><strong>GSTIN:</strong> ${companyGST}</div>
                 </div>
-              ` : ''}
-              ${includeSGST ? `
-                <div class="total-row">
-                  <div class="total-label">SGST (9%):</div>
-                  <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
+                <div class="invoice-title-area">
+                   <div class="doc-heading">${isConfirmed ? 'TAX INVOICE' : 'QUOTATION'}</div>
+                   <div style="margin-top: 12px;">
+                      <p style="margin: 2px;">Invoice No: <strong style="font-size: 11pt;">${invoiceNumber}</strong></p>
+                      <p style="margin: 2px;">Date: <strong>${formattedDate}</strong></p>
+                      <p style="margin: 2px; font-size: 8pt; color: #555;">Time: ${formattedTime}</p>
+                   </div>
                 </div>
-              ` : ''}
-              <div class="total-row grand-total">
-                <div class="total-label">Total:</div>
-                <div class="total-amount">₹${(totalAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</div>
               </div>
-              
-            </div>
-            
-            
-            
-            <div class="signature-section">
-              <div class="signature-box">
-                <div class="signature-line"></div>
-                <p>Customer Signature</p>
+
+              <div class="address-grid section">
+                <div class="address-box">
+                  <span class="box-label">Consignor (From)</span>
+                  <span class="highlight-text">${companyName}</span>
+                  <div>${companyAddress}</div>
+                  <div style="margin-top: 5px;"><strong>GSTIN:</strong> ${companyGST}</div>
+                </div>
+                <div class="address-box">
+                  <span class="box-label">Buyer (Bill To)</span>
+                  <span class="highlight-text">${customer}</span>
+                  <div style="margin-bottom: 4px;"><strong>Invoice Add:</strong> ${invoiceAddress || 'N/A'}</div>
+                  <div style="margin-bottom: 4px;"><strong>Delivery Add:</strong> ${deliveryAddress || 'Same as above'}</div>
+                  <div><strong>Phone:</strong> ${customerPhone || '-'}</div>
+                  <div style="margin-top: 5px;"><strong>GSTIN:</strong> ${customerGST || 'Unregistered'}</div>
+                </div>
               </div>
-              <div class="signature-box">
-                <div class="signature-line"></div>
-                <p>Authorized Signature</p>
-                <p style="font-size: 10px; margin-top: 5px;">Smart Business Solutions</p>
+
+              <div style="min-height: 300px;">
+                <table class="items-table">
+                  <thead>
+                    <tr>
+                      <th style="width: 5%;">Sr.</th>
+                      <th style="width: 45%; text-align: left;">Description of Goods</th>
+                      <th style="width: 10%;">Qty</th>
+                      <th style="width: 12%;">Rate</th>
+                      <th style="width: 10%;">Disc %</th>
+                      <th style="width: 18%;" class="last-col">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${orderLines.map((line, index) => `
+                      <tr>
+                        <td style="text-align: center;">${index + 1}</td>
+                        <td><strong style="font-size: 10pt;">${line.product}</strong></td>
+                        <td style="text-align: center;">${line.quantity}</td>
+                        <td style="text-align: right;">${line.unitPrice.toFixed(2)}</td>
+                        <td style="text-align: center;">${line.discount}%</td>
+                        <td style="text-align: right;" class="last-col"><strong>${calculateSubtotal(line).toFixed(2)}</strong></td>
+                      </tr>
+                    `).join('')}
+                    ${Array(Math.max(0, 8 - orderLines.length)).fill(0).map(() => `
+                      <tr>
+                        <td style="text-align: center;">&nbsp;</td>
+                        <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+                        <td class="last-col">&nbsp;</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="bottom-grid">
+                <div class="words-area">
+                  <span class="box-label">Amount Chargeable (in words)</span>
+                  <div style="font-weight: bold; margin-top: 5px;">Indian Rupees ${numberToWords(finalGrandTotal)}</div>
+                  <div style="margin-top: 15px; font-size: 8.5pt;">
+                     <strong>Payment Terms:</strong> ${selectedTerm}<br>
+                     <strong>Method:</strong> ${paymentMethod} | <strong>Status:</strong> ${paymentStatus}
+                  </div>
+                </div>
+                <div class="totals-area">
+                  <div class="total-row"><span>Sub Total</span><strong>₹${untaxedAmount.toFixed(2)}</strong></div>
+                  ${includeCGST ? `<div class="total-row"><span>CGST (9.0%)</span><span>₹${(untaxedAmount * 0.09).toFixed(2)}</span></div>` : ''}
+                  ${includeSGST ? `<div class="total-row"><span>SGST (9.0%)</span><span>₹${(untaxedAmount * 0.09).toFixed(2)}</span></div>` : ''}
+                  <div class="total-row grand-total"><span>Grand Total</span><span>₹${finalGrandTotal.toFixed(2)}</span></div>
+                </div>
+              </div>
+
+              <div class="terms-section">
+                <span class="terms-heading">Terms & Conditions:</span>
+                <div class="terms-text">
+                  1. Goods once sold will not be taken back or exchanged.<br>
+                  2. We are not responsible for any damage or loss during transit.<br>
+                  3. Interest @18% p.a. will be charged if the payment is not made within the due date.<br>
+                  4. All disputes are subject to the jurisdiction of local courts only.
+                </div>
+              </div>
+
+              <div class="sig-grid">
+                <div class="sig-box"><br><br>Receiver's Signature</div>
+                <div class="sig-box">
+                  For <strong>${companyName}</strong>
+                  <br><br><br>Authorized Signatory
+                </div>
               </div>
             </div>
-            
-            <div class="footer">
-              <p>Thank you for your business!</p>
-              <p>Smart Business Solutions | ${footerText} | www.smart.com</p>
-            </div>
+            <div style="text-align: center; font-size: 7.5pt; margin-top: 5px; color: #444;">This is a Computer Generated Document</div>
           </body>
         </html>
       `);
       printWindow.document.close();
-      printWindow.print();
+      printWindow.focus();
+      setTimeout(() => { printWindow.print(); }, 500);
       return;
     }
+    // ... logic for other buttons
 
     if (!validateCustomer()) return;
 
@@ -459,13 +513,19 @@ const NewQuotation = () => {
   const updateLine = (id, field, value) => {
     setOrderLines(orderLines.map(line => {
       if (line.id === id) {
-        const updatedLine = { ...line, [field]: value };
+        // Ensure numeric fields don't become negative
+        let newValue = value;
+        if (['quantity', 'unitPrice', 'taxes', 'discount'].includes(field)) {
+          const num = Number(value) || 0;
+          newValue = Math.max(0, num);
+        }
+        const updatedLine = { ...line, [field]: newValue };
         
         // Auto-save product when both name and price are filled
-        if (field === 'unitPrice' && updatedLine.product && parseFloat(value) > 0) {
+        if (field === 'unitPrice' && updatedLine.product && parseFloat(newValue) > 0) {
           // saveNewProduct expects a product object; pass name and price
           try {
-            saveNewProduct({ name: updatedLine.product, price: String(parseFloat(value) || 0), cost: '', category: 'General', stock: '', description: '', image: '' });
+            saveNewProduct({ name: updatedLine.product, price: String(parseFloat(newValue) || 0), cost: '', category: 'General', stock: '', description: '', image: '' });
           } catch (e) {
             // swallow any save errors to avoid disrupting price input
             console.warn('saveNewProduct failed', e);
@@ -479,6 +539,17 @@ const NewQuotation = () => {
   };
   const deleteLine = (id) => setOrderLines(orderLines.filter(line => line.id !== id));
   const handleFocus = (e) => { if (parseFloat(e.target.value) === 0) e.target.select(); };
+  const handleNumberKeyDown = (e) => {
+    // Prevent spinner or minus key from making the value negative
+    try {
+      const val = Number(e.target.value) || 0;
+      if ((e.key === 'ArrowDown' || e.key === '-') && val <= 0) {
+        e.preventDefault();
+      }
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const calculateSubtotal = (line) => {
     const base = line.quantity * line.unitPrice;
@@ -1173,10 +1244,10 @@ const NewQuotation = () => {
                       )}
                     </td>
 
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.quantity} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'quantity', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.unitPrice} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'unitPrice', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.taxes} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'taxes', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.discount} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'discount', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.quantity} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'quantity', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.unitPrice} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'unitPrice', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.taxes} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'taxes', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.discount} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'discount', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
                     <td className="py-1 sm:py-2 text-right pr-1 sm:pr-2 font-medium text-xs sm:text-sm">₹ {calculateSubtotal(line).toFixed(2)}</td>
                   </tr>
                 ))}

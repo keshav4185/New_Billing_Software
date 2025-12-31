@@ -45,8 +45,6 @@ const NewInvoice = () => {
   const [termsConditions, setTermsConditions] = useState('1. Payment due within specified terms\n2. Late payment charges may apply\n3. Subject to local jurisdiction');
   const [bankDetails, setBankDetails] = useState('Bank: HDFC Bank\nA/C: 1234567890\nIFSC: HDFC0001234');
   const [showSignature, setShowSignature] = useState(true);
-  const [showQRScanner, setShowQRScanner] = useState(false);
-  const [upiId, setUpiId] = useState('smartbusiness@paytm');
   const [includeCGST, setIncludeCGST] = useState(true);
   const [includeSGST, setIncludeSGST] = useState(true);
   const [advancePayment, setAdvancePayment] = useState(editingOrder?.advancePayment || 0);
@@ -218,13 +216,6 @@ const NewInvoice = () => {
   const paymentTerms = ['Net 15', 'Net 30', 'Net 45', 'Due on Receipt'];
   const paymentMethods = ['Bank Transfer', 'Cash', 'Card', 'UPI', 'Cheque'];
 
-  // Show QR Scanner when Online payment is selected
-  useEffect(() => {
-    if (paymentMethod === 'Online' && isConfirmed) {
-      setShowQRScanner(true);
-    }
-  }, [paymentMethod, isConfirmed]);
-
   useEffect(() => {
     const handleClick = (e) => {
       if (paymentRef.current && !paymentRef.current.contains(e.target)) {
@@ -259,57 +250,51 @@ const NewInvoice = () => {
   };
 
   const saveToSalesDashboard = () => {
-    // Update serial number in localStorage when saving
-    if (!isEditing) {
-      const currentSerial = parseInt(invoiceNumber.slice(4));
-      localStorage.setItem('lastInvoiceSerial', currentSerial.toString());
-    }
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-IN');
-    const timeStr = now.toLocaleTimeString('en-IN');
-    const invoiceData = {
-      id: editingOrderId || invoiceNumber,
-      invoiceDate: invoiceDate,
-      dueDate: dueDate,
-      date: editingOrder?.date || `${dateStr} ${timeStr}`,
-      createdAt: editingOrder?.createdAt || now.toISOString(),
-      customer,
-      customerPhone,
-      customerGST,
-      customerEmail,
-      invoiceAddress,
-      deliveryAddress,
-      termsConditions,
-      bankDetails,
-      salesperson: editingOrder?.salesperson || 'Admin',
-      total: totalAmount,
-      status: isConfirmed ? 'Invoice' : 'Invoice',
-      items: orderLines,
-      paymentTerms: selectedTerm,
-      paymentMethod,
-      paymentStatus,
-      dueDate,
-      advancePayment,
-      subtotal: untaxedAmount,
-      cgst: includeCGST ? (untaxedAmount * 0.09) : 0,
-      sgst: includeSGST ? (untaxedAmount * 0.09) : 0,
-      grandTotal: untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0))),
-      remainingAmount: Math.max(0, (untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment)
-    };
-    
-    const existingData = JSON.parse(localStorage.getItem('invoices') || '[]');
-    
-    if (isEditing) {
-      // Update existing record
-      const updatedData = existingData.map(item => 
-        item.id === editingOrderId ? invoiceData : item
-      );
-      localStorage.setItem('invoices', JSON.stringify(updatedData));
-    } else {
-      // Add new record
-      localStorage.setItem('invoices', JSON.stringify([invoiceData, ...existingData]));
-    }
+  if (!isEditing) {
+    const currentSerial = parseInt(invoiceNumber.slice(4));
+    localStorage.setItem('lastInvoiceSerial', currentSerial.toString());
+  }
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN');
+  const timeStr = now.toLocaleTimeString('en-IN');
+
+  const invoiceData = {
+    id: editingOrderId || invoiceNumber,
+    invoiceDate: invoiceDate,
+    date: editingOrder?.date || `${dateStr} ${timeStr}`,
+    createdAt: editingOrder?.createdAt || now.toISOString(),
+    customer,
+    customerPhone,
+    customerGST,
+    customerEmail,
+    invoiceAddress,
+    deliveryAddress,
+    termsConditions,
+    bankDetails,
+    salesperson: editingOrder?.salesperson || 'Admin',
+    total: totalAmount,
+    status: 'Invoice',
+    items: orderLines,
+    paymentTerms: selectedTerm,
+    paymentMethod,
+    paymentStatus,
+    dueDate, // Kept only one instance
+    advancePayment,
+    subtotal: untaxedAmount,
+    cgst: includeCGST ? (untaxedAmount * 0.09) : 0,
+    sgst: includeSGST ? (untaxedAmount * 0.09) : 0,
+    grandTotal: untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0))),
+    remainingAmount: Math.max(0, (untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment)
   };
+  
+  const existingData = JSON.parse(localStorage.getItem('invoices') || '[]');
+  if (isEditing) {
+    const updatedData = existingData.map(item => item.id === editingOrderId ? invoiceData : item);
+    localStorage.setItem('invoices', JSON.stringify(updatedData));
+  } else {
+    localStorage.setItem('invoices', JSON.stringify([invoiceData, ...existingData]));
+  }
+};
 
   const addChatMessage = (text) => {
     const newMsg = {
@@ -375,32 +360,40 @@ const NewInvoice = () => {
               <div class="logo-section">
                 <img src="${companyLogo}" alt="Company Logo" class="logo-img" />
               </div>
-              <div class="company-info">
+              <div class="company-info" style="text-align:right;">
                 <h1 class="title">INVOICE</h1>
-                <p class="subtitle">Invoice #: ${invoiceNumber}</p>
-                <p class="subtitle">Date: ${new Date().toLocaleDateString()}</p>
+                <div style="margin-top:8px; font-weight:800; font-size:15px;">Invoice #: ${invoiceNumber}</div>
+                <div style="margin-top:4px; color:#666; font-size:13px;">Date: ${invoiceDate || new Date().toLocaleDateString()} &nbsp; | &nbsp; Time: ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
               </div>
             </div>
             
             <div class="info-section">
-              <div class="info-block">
-                <h4>Bill To:</h4>
-                <p><strong>${customer}</strong></p>
-                ${invoiceAddress ? `<p>${invoiceAddress.replace(/\n/g, '<br>')}</p>` : ''}
+              <div class="company-box" style="border:2px solid #1F3A5F; padding:12px;">
+                <h4 style="margin:0 0 8px 0; color:#1F3A5F; text-transform:uppercase;">Company Details</h4>
+                <div style="font-weight:700;">${companyName || ''}</div>
+                <div style="margin-top:6px;">${companyAddress ? companyAddress.replace(/\n/g, '<br>') : ''}</div>
+                <div style="margin-top:6px;">GSTIN: ${companyGST || '-'}</div>
               </div>
-              <div class="info-block">
-                <h4>Invoice Details:</h4>
-                <p><strong>Expiration:</strong> ${expirationDate || 'Not specified'}</p>
-                <p><strong>Payment Terms:</strong> ${selectedTerm}</p>
-                <p><strong>Payment Method:</strong> ${paymentMethod}</p>
-                ${deliveryAddress ? `<p><strong>Delivery Address:</strong><br>${deliveryAddress.replace(/\n/g, '<br>')}</p>` : ''}
+
+              <div class="customer-box" style="border:2px solid #1F3A5F; padding:12px;">
+                <h4 style="margin:0 0 8px 0; color:#1F3A5F; text-transform:uppercase;">Customer Details</h4>
+                <div style="font-weight:700;">${customer || '-'}</div>
+                ${customerEmail ? `<div style="margin-top:6px;">Email: ${customerEmail}</div>` : ''}
+                <div style="margin-top:6px;">${invoiceAddress ? invoiceAddress.replace(/\n/g, '<br>') : '-'}</div>
+                ${deliveryAddress ? `<div style="margin-top:6px;">Delivery: ${deliveryAddress.replace(/\n/g, '<br>')}</div>` : ''}
+                <div style="margin-top:6px;">Phone: ${customerPhone || '-'}</div>
+                <div style="margin-top:6px;">GSTIN: ${customerGST || '-'}</div>
+                ${invoiceDate ? `<div style="margin-top:6px;">Invoice Date: ${invoiceDate}</div>` : ''}
+                ${dueDate ? `<div style="margin-top:6px;">Due Date: ${dueDate}</div>` : ''}
+                <div style="margin-top:6px;">Payment Terms: ${selectedTerm || '-'}</div>
+                <div style="margin-top:6px;">Payment Method: ${paymentMethod || '-'}</div>
               </div>
             </div>
             
             <table>
               <thead>
                 <tr>
-                  <th style="width: 40%;">Product/Service</th>
+                  <th style="width: 40%;">Product/Service/items</th>
                   <th style="width: 10%; text-align: center;">Qty</th>
                   <th style="width: 15%; text-align: right;">Unit Price</th>
                   <th style="width: 10%; text-align: center;">Tax %</th>
@@ -423,44 +416,45 @@ const NewInvoice = () => {
             </table>
             
             <div class="total-section">
-              <div class="total-row">
-                <div class="total-label">Gross Amount:</div>
-                <div class="total-amount">₹${grossAmount.toFixed(2)}</div>
-              </div>
-              <div class="total-row">
-                <div class="total-label">Total Discount:</div>
-                <div class="total-amount">-₹${totalDiscount.toFixed(2)}</div>
-              </div>
-              <div class="total-row">
-                <div class="total-label">Subtotal:</div>
-                <div class="total-amount">₹${untaxedAmount.toFixed(2)}</div>
-              </div>
-              ${includeCGST ? `
-                <div class="total-row">
-                  <div class="total-label">CGST (9%):</div>
-                  <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
-                </div>
-              ` : ''}
-              ${includeSGST ? `
-                <div class="total-row">
-                  <div class="total-label">SGST (9%):</div>
-                  <div class="total-amount">₹${(untaxedAmount * 0.09).toFixed(2)}</div>
-                </div>
-              ` : ''}
-              <div class="total-row grand-total">
-                <div class="total-label">Total:</div>
-                <div class="total-amount">₹${(untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))).toFixed(2)}</div>
-              </div>
-              ${advancePayment > 0 ? `
-                <div class="total-row" style="color: #28a745; font-weight: bold; margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
-                  <div class="total-label">Advance Paid:</div>
-                  <div class="total-amount">₹${advancePayment.toFixed(2)}</div>
-                </div>
-                <div class="total-row" style="color: #dc3545; font-weight: bold;">
-                  <div class="total-label">Remaining Amount:</div>
-                  <div class="total-amount">₹${Math.max(0, (untaxedAmount + (untaxedAmount * ((includeCGST ? 0.09 : 0) + (includeSGST ? 0.09 : 0)))) - advancePayment).toFixed(2)}</div>
-                </div>
-              ` : ''}
+              <table style="width:360px; float:right; border-collapse:collapse; font-size:14px;">
+                <tbody>
+                  <tr>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6;">Untaxed Amount</td>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6; text-align:right;">₹${untaxedAmount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6;">Total Discount</td>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6; text-align:right;">-₹${totalDiscount.toFixed(2)}</td>
+                  </tr>
+                  ${includeCGST ? `
+                  <tr>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6;">CGST (9%)</td>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6; text-align:right;">₹${(untaxedAmount * 0.09).toFixed(2)}</td>
+                  </tr>
+                  ` : ''}
+                  ${includeSGST ? `
+                  <tr>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6;">SGST (9%)</td>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6; text-align:right;">₹${(untaxedAmount * 0.09).toFixed(2)}</td>
+                  </tr>
+                  ` : ''}
+                  ${advancePayment > 0 ? `
+                  <tr>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6;">Advance Payment</td>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6; text-align:right; color:#28a745;">₹${advancePayment.toFixed(2)}</td>
+                  </tr>
+                  ` : ''}
+                  <tr>
+                    <td style="padding:10px 12px; border:1px solid #ddd; background:#f7fbff; font-weight:800;">Total</td>
+                    <td style="padding:10px 12px; border:1px solid #ddd; background:#f7fbff; text-align:right; font-weight:800; color:#1F3A5F;">₹${(untaxedAmount + (includeCGST ? untaxedAmount * 0.09 : 0) + (includeSGST ? untaxedAmount * 0.09 : 0)).toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6;">Remaining Amount</td>
+                    <td style="padding:8px 10px; border:1px solid #e6e6e6; text-align:right; font-weight:700;">₹${Math.max(0, (untaxedAmount + (includeCGST ? untaxedAmount * 0.09 : 0) + (includeSGST ? untaxedAmount * 0.09 : 0)) - (advancePayment || 0)).toFixed(2)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div style="clear:both"></div>
             </div>
             
             <div class="terms-section">
@@ -534,13 +528,19 @@ const NewInvoice = () => {
   const updateLine = (id, field, value) => {
     setOrderLines(orderLines.map(line => {
       if (line.id === id) {
-        const updatedLine = { ...line, [field]: value };
-        
-        // Auto-save product when both name and price are filled
-        if (field === 'unitPrice' && updatedLine.product && parseFloat(value) > 0) {
-          saveNewProduct({ name: updatedLine.product, price: parseFloat(value) });
+        // Ensure numeric fields don't become negative
+        let newValue = value;
+        if (['quantity', 'unitPrice', 'taxes', 'discount'].includes(field)) {
+          const num = Number(value) || 0;
+          newValue = Math.max(0, num);
         }
-        
+        const updatedLine = { ...line, [field]: newValue };
+
+        // Auto-save product when both name and price are filled
+        if (field === 'unitPrice' && updatedLine.product && parseFloat(newValue) > 0) {
+          saveNewProduct({ name: updatedLine.product, price: parseFloat(newValue) });
+        }
+
         return updatedLine;
       }
       return line;
@@ -548,6 +548,17 @@ const NewInvoice = () => {
   };
   const deleteLine = (id) => setOrderLines(orderLines.filter(line => line.id !== id));
   const handleFocus = (e) => { if (parseFloat(e.target.value) === 0) e.target.select(); };
+  const handleNumberKeyDown = (e) => {
+    // Prevent spinner or minus key from making the value negative
+    try {
+      const val = Number(e.target.value) || 0;
+      if ((e.key === 'ArrowDown' || e.key === '-') && val <= 0) {
+        e.preventDefault();
+      }
+    } catch (err) {
+      // ignore
+    }
+  };
 
   const calculateSubtotal = (line) => {
     const qty = Number(line.quantity) || 0;
@@ -1036,59 +1047,6 @@ const NewInvoice = () => {
         </div>
       )}
 
-      {/* QR Scanner Modal */}
-      {showQRScanner && (
-        <div className="fixed inset-0 bg-black/60 z-[250] flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full">
-            <div className="bg-gradient-to-r from-green-500 to-blue-500 text-white p-4 rounded-t-xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">💳</span>
-                  <div>
-                    <h3 className="font-bold text-lg">Online Payment</h3>
-                    <p className="text-white/80 text-sm">Scan QR to Pay</p>
-                  </div>
-                </div>
-                <button onClick={() => setShowQRScanner(false)} className="text-white/80 hover:text-white">
-                  <XMarkIcon className="w-5 h-5" />
-                </button>
-              </div>
-            </div>
-            
-            <div className="p-6 text-center">
-              <div className="bg-white border-4 border-gray-200 rounded-lg p-4 mb-4 inline-block">
-                <div className="w-48 h-48 bg-gray-100 rounded flex items-center justify-center">
-                  <div className="grid grid-cols-8 gap-1 w-40 h-40">
-                    {Array.from({length: 64}, (_, i) => (
-                      <div key={i} className={`w-full h-full ${Math.random() > 0.5 ? 'bg-black' : 'bg-white'}`} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                <div className="flex justify-between mb-2">
-                  <span>Amount:</span>
-                  <span className="font-bold text-xl text-green-600">₹{(untaxedAmount + (untaxedAmount * 0.18)).toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>UPI ID:</span>
-                  <span className="font-mono text-sm">{upiId}</span>
-                </div>
-              </div>
-              
-              <div className="flex gap-3">
-                <button onClick={() => setShowQRScanner(false)} className="flex-1 bg-gray-500 text-white py-2 rounded">Close</button>
-                <button onClick={() => {
-                  addChatMessage(`💳 Payment completed for ₹${(untaxedAmount + (untaxedAmount * 0.18)).toFixed(2)}`);
-                  setShowQRScanner(false);
-                }} className="flex-1 bg-green-500 text-white py-2 rounded">Payment Done</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {showError && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 bg-red-600 text-white px-6 py-2 rounded">
           <ExclamationCircleIcon className="w-5 h-5" />
@@ -1283,7 +1241,7 @@ const NewInvoice = () => {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left min-w-[600px] sm:min-w-[800px]">
-              <thead>
+              <thead className="sticky top-0 bg-white z-10">
                 <tr className="border-b">
                   <th className="w-6 sm:w-8 py-2 sm:py-3"></th>
                   <th className="py-2 sm:py-3 pl-1 sm:pl-2 text-xs sm:text-sm">Product</th>
@@ -1348,10 +1306,10 @@ const NewInvoice = () => {
                       )}
                     </td>
 
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.quantity} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'quantity', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.unitPrice} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'unitPrice', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.taxes} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'taxes', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
-                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.discount} onFocus={handleFocus} onChange={(e) => updateLine(line.id, 'discount', parseFloat(e.target.value) || 0)} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.quantity} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'quantity', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.unitPrice} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'unitPrice', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.taxes} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'taxes', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
+                    <td className="py-1 sm:py-2 text-right px-1 sm:px-2"><input disabled={isConfirmed} type="number" value={line.discount} onFocus={handleFocus} onKeyDown={handleNumberKeyDown} onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); updateLine(line.id, 'discount', val); }} className="w-full text-right outline-none bg-transparent text-xs sm:text-sm" /></td>
                     <td className="py-1 sm:py-2 text-right pr-1 sm:pr-2 font-medium text-xs sm:text-sm">₹ {calculateSubtotal(line).toFixed(2)}</td>
                   </tr>
                 ))}
@@ -1394,7 +1352,8 @@ const NewInvoice = () => {
                     disabled={isConfirmed} 
                     type="number" 
                     value={advancePayment} 
-                    onChange={(e) => setAdvancePayment(parseFloat(e.target.value) || 0)} 
+                    onKeyDown={handleNumberKeyDown}
+                    onChange={(e) => { const val = Math.max(0, parseFloat(e.target.value) || 0); setAdvancePayment(val); }} 
                     className="w-20 sm:w-24 text-right outline-none border-b border-slate-200 py-1 text-xs sm:text-sm" 
                     placeholder="0.00"
                   />
