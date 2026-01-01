@@ -120,7 +120,7 @@ const Tryhome = () => {
             </p>
           </div>
 
-        <a href="/tryapppage">  <button className="w-full bg-white-700 hover:bg-green-700 text-black hover:bg-indigo-400 hover:text-white font-bold py-5 rounded-xl transition-all active:scale-95 shadow-lg shadow-purple-900/20 text-xl border-2">
+        <a href="/welcome">  <button className="w-full bg-white-700 hover:bg-green-700 text-black hover:bg-indigo-400 hover:text-white font-bold py-5 rounded-xl transition-all active:scale-95 shadow-lg shadow-purple-900/20 text-xl border-2">
             Continue
           </button></a>
         </div>

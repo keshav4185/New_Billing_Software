@@ -565,6 +565,11 @@ const NewQuotation = () => {
   const totalAmount = orderLines.reduce((acc, line) => acc + calculateSubtotal(line), 0);
   const getBtnStyle = (isPrimary = false) => isPrimary ? "bg-[#1F3A5F] text-white px-3 py-1 rounded font-bold" : "bg-[#f8f9fa] border border-slate-300 text-slate-700 px-3 py-1 rounded font-medium hover:bg-slate-100";
 
+  const getCustomerHistory = () => {
+    const quotations = JSON.parse(localStorage.getItem('quotations') || '[]');
+    return quotations.sort((a, b) => new Date(b.date) - new Date(a.date));
+  };
+
   return (
     <div className="flex flex-col h-screen bg-white font-sans text-sm overflow-hidden text-slate-700">
       
@@ -1312,7 +1317,62 @@ const NewQuotation = () => {
             <h4 className="font-bold text-sm">Quotation Panel</h4>
           </div>
           <div className="p-4 text-sm text-slate-600">
-            <p>Chat/history and customer history removed for a minimal quotation UI.</p>
+            {/* Recent Quotation History */}
+            <div className="border-t pt-4 mt-4">
+              <h4 className="font-bold text-slate-700 text-sm mb-3">Recent Quotations</h4>
+              <div className="space-y-2">
+                {getCustomerHistory().slice(0, 3).map((quotation, index) => (
+                  <div key={index} className="bg-slate-50 p-2 rounded text-xs">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-slate-800">{quotation.id}</p>
+                        <p className="text-slate-600">{quotation.customer}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-blue-600">₹{quotation.total?.toFixed(2)}</p>
+                        <span className={`px-1 py-0.5 rounded text-[10px] font-bold text-white ${
+                          quotation.status === 'Sales Order' ? 'bg-green-500' : 'bg-teal-500'
+                        }`}>
+                          {quotation.status || 'Quotation'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {getCustomerHistory().length === 0 && (
+                  <p className="text-slate-400 text-xs italic">No previous quotations</p>
+                )}
+              </div>
+            </div>
+            
+            {/* Recent Invoice History */}
+            <div className="border-t pt-4 mt-4">
+              <h4 className="font-bold text-slate-700 text-sm mb-3">Recent Invoices</h4>
+              <div className="space-y-2">
+                {JSON.parse(localStorage.getItem('invoices') || '[]').slice(0, 3).map((invoice, index) => (
+                  <div key={index} className="bg-slate-50 p-2 rounded text-xs">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-bold text-slate-800">{invoice.id}</p>
+                        <p className="text-slate-600">{invoice.customer}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold text-purple-600">₹{invoice.total?.toFixed(2)}</p>
+                        <span className={`px-1 py-0.5 rounded text-[10px] font-bold text-white ${
+                          invoice.paymentStatus === 'Paid' ? 'bg-green-500' : 
+                          invoice.paymentStatus === 'Overdue' ? 'bg-red-500' : 'bg-orange-500'
+                        }`}>
+                          {invoice.paymentStatus || 'Unpaid'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                {JSON.parse(localStorage.getItem('invoices') || '[]').length === 0 && (
+                  <p className="text-slate-400 text-xs italic">No previous invoices</p>
+                )}
+              </div>
+            </div>
           </div>
         </aside>
       </div>

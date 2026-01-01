@@ -109,12 +109,14 @@ const Navbar = () => {
                                             </div>
                                         )}
                                     </div>
-                                    <a href="trypage">   <Button outline className="try hover:bg-indigo-400  ">Try it free</Button> </a>
+                                    <a href="trypage">   <Button outline className="try hover:bg-indigo-400  ">Start Billing</Button> </a>
                                 </>
                             ) : (
                                 <>
                                     <a href="/Account">  <Button outline className="w-full hover:bg-indigo-400 " >Sign in</Button></a> 
-                                    <a href="trypage">   <Button outline className="try hover:bg-indigo-400  ">Try it free</Button> </a>
+                                    {/* <a href="trypage">   <Button outline className="try hover:bg-indigo-400  ">Try it free</Button> </a> */}
+                                    <a href="/Signup">   <Button outline className="try hover:bg-indigo-400  ">Sign up</Button> </a>
+
                                 </>
                             )}
                         </div>
@@ -162,12 +164,12 @@ const Navbar = () => {
                                     </div>
                                     <span className="font-medium text-gray-700">{userName}</span>
                                 </Link>
-                                <a href="/trypage">  <Button outline className="w-full try">Try it free</Button></a>
+                                <a href="/trypage">  <Button outline className="w-full try">Start Billing</Button></a>
                             </>
                         ) : (
                             <>
                                 <a href="/Account">  <Button outline className="w-full" >Sign in</Button></a> 
-                                <a href="/trypage">  <Button outline className="w-full try">Try it free</Button></a>
+                                <a href="/trypage">  <Button outline className="w-full try">Start Billing</Button></a>
                             </>
                         )}
                     </div>

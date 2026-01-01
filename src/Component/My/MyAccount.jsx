@@ -1,84 +1,99 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
-  ShoppingBagIcon, 
-  EnvelopeIcon, 
-  ClockIcon, 
-  MapPinIcon, 
-  SignalIcon,
-  PencilSquareIcon
+  DocumentPlusIcon, 
+  TableCellsIcon, 
+  UserCircleIcon,
+  MapPinIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
 
-const MyAccount = () => {
-  const cards = [
-    { title: 'Your Orders', desc: 'Follow, view or pay your orders', Icon: ShoppingBagIcon },
-    { title: 'Your Invoices', desc: 'Follow, download or pay your invoices', Icon: EnvelopeIcon },
-    { title: 'Timesheets', desc: 'Review all timesheets related to your projects', Icon: ClockIcon },
-    { title: 'Addresses', desc: 'Add, remove or modify your addresses', Icon: MapPinIcon },
-    { title: 'Connection & Security', desc: 'Configure your connection parameters', Icon: SignalIcon },
+const StaffAccount = () => {
+  const navigate = useNavigate();
+  const [todaySales, setTodaySales] = useState(0);
+
+  useEffect(() => {
+   
+    const savedData = JSON.parse(localStorage.getItem('quotations') || '[]');
+    const today = new Date().toLocaleDateString();
+    const total = savedData
+      .filter(inv => new Date(inv.date).toLocaleDateString() === today)
+      .reduce((acc, curr) => acc + (Number(curr.total) || 0), 0);
+    setTodaySales(total);
+  }, []);
+
+  const staffActions = [
+    { 
+      title: 'Create New Bill', 
+      desc: 'Start a new quotation or tax invoice', 
+      Icon: DocumentPlusIcon,
+      path: '/new-quotation',
+      color: 'bg-indigo-600'
+    },
+    { 
+      title: 'My Recent Sales', 
+      desc: 'Check your previous bills of the day', 
+      Icon: TableCellsIcon,
+      path: '/sdashboardpage',
+      color: 'bg-emerald-600'
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-700">
-      {/* Header */}
-      
+    <div className="min-h-screen bg-[#f3f4f6] font-sans">
+      {/* Header for Staff */}
+    
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-8 py-6">
-        <h1 className="text-3xl font-bold mb-6 text-slate-900">My account</h1>
+      <main className="max-w-5xl mx-auto px-6 py-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold text-slate-800">Welcome, Keshav</h1>
+          <p className="text-slate-500 text-sm">Have a great day at the billing desk!</p>
+        </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Left: Cards Grid */}
-          <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-min">
-            {cards.map((card, idx) => (
-              <div key={idx} className="flex items-start gap-4 p-4 bg-[#f8f9fa] rounded-lg hover:shadow-md transition-shadow cursor-pointer border border-transparent hover:border-slate-200">
-                <card.Icon className="w-10 h-10 text-slate-400 shrink-0" />
-                <div>
-                  <h3 className="font-bold text-lg text-slate-800">{card.title}</h3>
-                  <p className="text-sm text-slate-500 leading-relaxed">{card.desc}</p>
-                </div>
+        {/* Today's Sales Counter - Staff */}
+        <div className="bg-gradient-to-r from-indigo-600 to-blue-500 p-8 rounded-3xl text-white shadow-lg mb-10">
+          <p className="text-indigo-100 text-sm font-bold uppercase tracking-wider">Your Sales Today</p>
+          <h2 className="text-4xl font-black mt-2">₹{todaySales.toLocaleString('en-IN')}</h2>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {staffActions.map((action, idx) => (
+            <div 
+              key={idx} 
+              onClick={() => navigate(action.path)}
+              className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-xl transition-all cursor-pointer flex items-center gap-6"
+            >
+              <div className={`${action.color} p-4 rounded-2xl text-white shadow-lg shadow-indigo-100`}>
+                <action.Icon className="w-8 h-8" />
               </div>
-            ))}
-          </div>
-
-          {/* Right: Sidebar Info */}
-          <div className="lg:w-80 space-y-4">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-indigo-700 rounded flex items-center justify-center text-white text-xl font-bold">
-                K
+              <div>
+                <h3 className="font-bold text-lg text-slate-800">{action.title}</h3>
+                <p className="text-sm text-slate-500">{action.desc}</p>
               </div>
-              <h2 className="text-xl font-bold">Keshav</h2>
             </div>
+          ))}
+        </div>
 
-            <div className="space-y-4 text-sm text-slate-600">
-              <div className="flex gap-2">
-                <MapPinIcon className="w-5 h-5 shrink-0 text-slate-400" />
-                <p>Apartment/flat no: 112, floor no: 1, Building name: golden plaza, Pune 412307, Maharashtra, India</p>
+        {/* Profile Summary Footer */}
+        <div className="mt-12 bg-white p-6 rounded-2xl border border-dashed border-slate-300 flex flex-wrap gap-8 items-center justify-between">
+           <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-500">K</div>
+              <div>
+                <p className="text-sm font-bold text-slate-800">Keshav Golande</p>
+                <p className="text-xs text-slate-400">Store Executive</p>
               </div>
-              <div className="flex gap-2">
-                <span className="font-bold">📞</span>
-                <p>+91 77768 81055</p>
-              </div>
-              <div className="flex gap-2">
-                <EnvelopeIcon className="w-5 h-5 text-slate-400" />
-                <p>keshavgolande46@gmail.com</p>
-              </div>
-              <button className="flex items-center gap-2 text-teal-600 font-medium hover:underline">
-                <PencilSquareIcon className="w-4 h-4" /> Edit information
-              </button>
-            </div>
-
-            <div className="pt-6 border-t">
-              <h3 className="text-xl font-bold mb-3">Useful Links</h3>
-              <ul className="space-y-2 text-teal-600 font-medium">
-                <li><a href="#" className="hover:underline">My Partner Dashboard</a></li>
-                <li><a href="#" className="hover:underline">My Apps Dashboard</a></li>
-              </ul>
-            </div>
-          </div>
+           </div>
+           <div className="flex gap-6 text-xs text-slate-500 font-medium">
+              <span className="flex items-center gap-1"><PhoneIcon className="w-4 h-4"/> +91 77768 81055</span>
+              <span className="flex items-center gap-1"><EnvelopeIcon className="w-4 h-4"/> keshav@gmail.com</span>
+           </div>
         </div>
       </main>
     </div>
   );
 };
 
-export default MyAccount;
+export default StaffAccount;
